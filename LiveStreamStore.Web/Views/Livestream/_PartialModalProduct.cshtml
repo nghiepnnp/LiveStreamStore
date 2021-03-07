@@ -1,0 +1,1230 @@
+﻿@using LiveStreamStore.Lib.Data.DBContext.Models;
+@using Microsoft.AspNetCore.Http;
+@{
+    LiveStream liveStream = ViewBag.LiveStream;
+    List<Category> listCategory = ViewBag.ListCategory;
+    List<ProductInfo> listProductInfo = ViewBag.ListProductInfo;
+}
+<style>
+    #listCategory, #listProduct {
+        position: absolute;
+        border: 1px solid #d4d4d4;
+        border-bottom: none;
+        border-top: none;
+        z-index: 99;
+        left: 0;
+        right: 0;
+        max-height: 280px;
+        box-sizing: border-box;
+        display: block;
+        margin: 0;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        padding: 0;
+    }
+
+        #listCategory div, #listProduct div[class="row item"] {
+            cursor: pointer;
+            background-color: #fff;
+            min-height: 38px;
+            padding: 7px;
+            border: 1px solid #d4d4d4;
+        }
+
+            #listCategory div:hover, #listProduct div:hover {
+                background-color: #2a62bc;
+                color: white;
+            }
+
+    .daubatbuoc {
+        color: red;
+        display: inline-block;
+    }
+
+    th {
+        text-align: center;
+    }
+
+    .searchable input::placeholder {
+        font-size: .9rem;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    #ModalSelectP {
+        font-size: 13px;
+    }
+
+    .DelInRow {
+        font-size: 20px;
+        padding: 2px 10px;
+    }
+
+        .DelInRow:hover {
+            background: #ccc;
+        }
+
+        .DelInRow:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+    #divImgProductModal, #divbtnDeleteProductModal {
+        height: 100px;
+        line-height: 100px;
+    }
+
+    #imgProductModal {
+        width: 100px;
+        height: 100px;
+    }
+
+    /* ipad mini */
+    @@media only screen and (max-device-width: 768px) and (-webkit-min-device-pixel-ratio: 1) {
+        #imgProductModal {
+            width: 65px;
+            height: 65px;
+        }
+        .item {
+            height: 82px;
+        }
+        #divImgProductModal, #divbtnDeleteProductModal {
+            height: 65px;
+            line-height: 65px;
+        }
+    }
+</style>
+
+<div id="add-contact" class="modal fade in" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Thêm Sản Phẩm</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="formProduct" class="form-horizontal" autocomplete="off">
+                    <div class="alert alert-danger" id="Error" style="display:none">
+
+                    </div>
+                    <div class="form-group" id="divChonSanPham">
+                        <label class="col-md-12">Chọn Sản Phẩm</label>
+                        <div class="col-md-12">
+                            <input type="text" class="form-control" id="Product" name="Name" placeholder="Nhập tên sản phẩm" style="background-color: #f1f1f1" />
+                            <input type="hidden" id="mIdProductInfo" value="" />
+                            <div id="listProduct">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col">
+                                <label class="col-md-12">Chọn Danh Mục <span class="daubatbuoc">*</span></label>
+                                <div class="col-md-12">
+                                    <input type="text" class="form-control" id="Category" placeholder="Nhập tên danh mục" style="background-color: #f1f1f1" required />
+                                    <input type="hidden" id="mIdCategory" value="" />
+                                    <div class="col-md-12" id="listCategory">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <label class="col-md-12">Tên <span class="daubatbuoc">*</span></label>
+                                <div class="col-md-12">
+                                    <input type="text" class="form-control" id="mName" placeholder="Nhập tên" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col">
+                                <label class="col-md-12">Mã <span class="daubatbuoc">*</span></label>
+                                <div class="col-md-12">
+                                    <input type="text" class="form-control" id="mCode" placeholder="Nhập mã" required />
+                                </div>
+                            </div>
+                            <div class="col">
+                                <label class="col-md-12">Giá (VND) <span class="daubatbuoc">*</span></label>
+                                <div class="col-md-12">
+                                    <input type="number" class="form-control" id="mPrice" placeholder="Nhập giá" min="1" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col">
+                                <label class="col-md-12">Cân nặng</label>
+                                <div class="col-md-12">
+                                    <input type="number" class="form-control" id="mWeight" placeholder="Nhập cân nặng" min="0" required />
+                                </div>
+                            </div>
+                            <div class="col">
+                                <label class="col-md-12">Barcode</label>
+                                <div class="col-md-12">
+                                    <input type="text" class="form-control" id="mBarcode" placeholder="Nhập mã barcode" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col">
+
+                                <label class="col-md-12">Số lượng <span class="daubatbuoc">*</span></label>
+                                <div class="col-md-12">
+                                    <input type="number" class="form-control" id="mQuantity" placeholder="Nhập số lượng" min="1" required />
+                                </div>
+                            </div>
+                            <div class="col">
+                                <label class="col-md-12">Số lượng mua giới hạn (/người) <span class="daubatbuoc">*</span></label>
+                                <div class="col-md-12">
+                                    <input type="number" class="form-control" id="mLimit" placeholder="Nhập số lượng giới hạn mua" min="1" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-12">Mô tả</label>
+                        <div class="col-md-12">
+                            <textarea type="text" class="form-control" id="mDescription" placeholder="Nhập mô tả"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-12">Ảnh</label>
+                        <div class="col-md-12">
+                            <input type="file" class="form-control" id="mImage" name="Image" />
+                            <center style="margin-top: 20px;">
+                                <img src="" alt="" width="150px" id="select-image">
+
+                            </center>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info waves-effect" id="btnSave">Lưu</button>
+                <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Hủy</button>
+                <input hidden="hidden" type="text" class="form-control" id="mId" value="0">
+                <input hidden="hidden" type="text" class="form-control" id="mStoreId" value="@liveStream.User.StoreId">
+            </div>
+        </div>
+    </div>
+</div>
+@if (listCategory != null)
+{
+    <div id="divCategory" hidden>
+        @{
+            foreach (var item in listCategory)
+            {
+                <div class="CategoryId">@item.Id</div>
+                <div class="CategoryName">@item.Name</div>
+            }
+        }
+    </div>
+}
+@if (listProductInfo != null)
+{
+    <div id="divProductInfo" hidden>
+        @{
+            foreach (var item in listProductInfo)
+            {
+                <div class="ProductId">@item.Id</div>
+                <div class="ProductName">@item.Name</div>
+                <div class="ProductCode">@item.Product.LastOrDefault().Code</div>
+                <div class="ProductBarCode">@item.Barcode</div>
+                <div class="ProductPrice">@item.Product.LastOrDefault().Price</div>
+                <div class="ProductWeight">@item.Product.LastOrDefault().Weight</div>
+                <div class="ProductQuantity">@item.Product.LastOrDefault().Quantity</div>
+                <div class="ProductLimited">@item.Product.LastOrDefault().Limited</div>
+                <div class="ProductDescription">@item.Description</div>
+                <div class="ProCateId">@item.Category.Id</div>
+                <div class="ProCateName">@item.Category.Name</div>
+                <div class="ProductImage">@(item.Image == null ? "" : item.Image.FileUrl)</div>
+            }
+        }
+    </div>
+}
+<div id="ModalSelectP" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-0 border-0" style="min-height:200px; margin-top:50px">
+            <div class="modal-header bg-dark rounded-0" style="background: linear-gradient(to right, #318f94 0%, #5ec58c 100%);">
+                <h5 class="modal-title text-white">NHẬP TÊN SẢN PHẨM MUỐN THÊM</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="searchSLP">
+                    <input type="text" placeholder="Nhập tên sản phẩm bạn muốn tìm kiếm..." value="" class="ProductInline pl-3" />
+                    <ul class="d-block">
+                        @foreach (var prodInfo in listProductInfo)
+                        {
+                            <li>
+                                <div class="row">
+                                    <div class="col-11 row ml-2 SeInRow d-block-inline" data-id="@prodInfo.Id">
+                                        <div class="col-2">
+                                            <img src="@(prodInfo.Image == null ? "/images/defaults/images.png" : prodInfo.Image.FileUrl)" width="55px">
+                                        </div>
+                                        <div class="col-10">
+                                            <div>Tên sảm phẩm: @prodInfo.Name</div>
+                                            <div>Giá: <span class="SePrice">@prodInfo.Product.LastOrDefault().Price</span></div>
+                                            <div>Mô tả: @prodInfo.Description</div>
+                                        </div>
+                                        <div hidden id="strArr@(prodInfo.Id)">
+                                            <div class="ProdName">@prodInfo.Name</div>
+                                            <div class="ProdCode">@prodInfo.Product.LastOrDefault().Code</div>
+                                            <div class="ProdBarCode">@prodInfo.Barcode</div>
+                                            <div class="ProdPrice">@prodInfo.Product.LastOrDefault().Price</div>
+                                            <div class="ProdWeight">@prodInfo.Product.LastOrDefault().Weight</div>
+                                            <div class="ProdQuantity">@prodInfo.Product.LastOrDefault().Quantity</div>
+                                            <div class="ProdLimited">@prodInfo.Product.LastOrDefault().Limited</div>
+                                            <div class="ProdDescription">@prodInfo.Description</div>
+                                            <div class="ProCateId">@prodInfo.Category.Id</div>
+                                            <div class="ProCateName">@prodInfo.Category.Name</div>
+                                            <div class="ProdImage">@(prodInfo.Image == null ? "" : prodInfo.Image.FileUrl)</div>
+                                            <div class="ProdImageId">@prodInfo.ImageId</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-1">
+                                        <button class="DelInRow btn rounded-circle text-secondary" title="Xóa" data-id="@prodInfo.Id">&times;</button>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                    <div class="text-center my-4">Không tìm được sản phẩm với từ khóa như trên, vui lòng thử lại.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).on("change", "#mImage", encodeImageFileAsURL(function (base64Img) {
+        $("#select-image").attr("src", base64Img);
+    }))
+
+    var idtr = 1;
+    var countRow = 0;
+
+    $(document).on("click", "#btnCreate, .SeInRow", function () {
+
+        var __id = $(this).data("id");
+        var clo = $('#strArr' + __id);
+
+        $('[data-toggle="tooltip"]').tooltip('hide');
+        $('.creup-hidden').attr("hidden", "hidden");
+        var row = `<tr style="border-left:3px solid red; margin-left:-3px" class="trtemp">
+            <input hidden id="mId" value="0"/>
+            <td colspan="2" class="text-right">
+                <input type="text" class="form-control mb-1 rounded-0" style="width:85%" id="Name" placeholder="" value="${clo.find('.ProdName').html() ?? ''}" required ${clo.find('.ProdName').html() != null ? 'disabled':''}/>
+                <div class="text-center clearfix"><button id="btnCreateOrUpdate" class="btn btn-primary btn-sm rounded-0" data-id="0" type="button" data-placement="top" data-original-title="Save"><i class="fas fa-save"></i></button>
+                <button id="cancel" class="btn btn-danger btn-sm rounded-0  ml-1" type="button" data-placement="top" data-original-title="Cancel"><i class="fas fa-times"></i></button></div>
+            </td>
+            <td class="text-center"> <input type="text" class="form-control rounded-0" id="Code" name="LoopCode" placeholder="" value="${clo.find('.ProdCode').html() ?? ''}" required/></td>
+            <td> <input type="number" class="form-control rounded-0" id="Weight" placeholder="" min="0" value="${clo.find('.ProdWeight').html() ?? ''}" required /></td>
+            <td> <input type="text" class="form-control rounded-0" id="Barcode" placeholder="" value="${clo.find('.ProdBarCode').html() ?? ''}"  ${clo.find('.ProdBarCode').html() != null ? 'disabled':''}/></td>
+            <td> <input type="number" class="form-control rounded-0" id="Price" placeholder="" min="1" value="${clo.find('.ProdPrice').html() ?? ''}" required /></td>
+            <td> <input type="number" class="form-control rounded-0" id="Quantity" placeholder="" min="1" value="${clo.find('.ProdQuantity').html() ?? ''}" required /></td>
+            <td> <input type="number" class="form-control rounded-0" id="Limit" placeholder="" min="1" value="${clo.find('.ProdLimited').html() ?? ''}" required /></td>
+            <td class="text-center"> <span class="btn-file border-0 btn-select-upload d-block-inline rounded-0"> ${clo.find('.ProdImage').html() == null ?`<div class="d-block-inline btn btn-success changeImg${idtr}">Chọn</div>`:`<div class="d-block-inline btn changeImg${idtr}"><img src="${clo.find('.ProdImage').html()??''}" width="55px"></div>`} <input type="file" class="Image" id="Image${idtr}" data-idtr="${idtr}" name="Image"></span> </td>
+            <td class="searchable">
+                <input type="text" placeholder="Chọn danh mục" class="CategoryInline" data-idcategory="${clo.find('.ProCateId').html() ?? ''}" value="${clo.find('.ProCateName').html() ?? ''}" required ${clo.find('.ProCateName').html() != null ? 'disabled':''}/>
+                <ul>@foreach(var cat in listCategory) {<li data-id="0" data-categoryid="@cat.Id">@cat.Name</li>}</ul>
+            </td>
+            <td> <textarea type="text" class="form-control rounded-0" id="Description" placeholder="Nhập mô tả..." style="min-width:8em">${clo.find('.ProdDescription').html() ?? ''}</textarea></td>
+            <td class="text-center"></td>
+            <td hidden><input type="text" id="ImageId" hidden value="${clo.find('.ProdImageId').html()}"/></td>
+            </tr>`;
+        $("table").prepend(row);
+        countRow > 0 ? $('#group-btn-sr').removeAttr('hidden') : ''
+        idtr++; countRow++;
+    });
+
+    $(document).on("click", "#InsertListProduct", function () {
+        var flag = true;
+        $(".trtemp").find("input[required]").each((k,v) => {
+            if (v.value.trim() == '') {
+                v.style["border"] = "1px solid red";
+                flag = false;
+            } else {
+                v.style["border"] = "1px solid #ced4da";
+            }
+        });
+        !flag ? toastr.warning('Vui lòng nhập thông tin vào các trường báo đỏ.') : ''
+
+        if (flag) {
+
+            var formData = new FormData();
+            var listProduct = [];
+            var listProductInfo = [];
+            var formFile = [];
+            var checkLoopCode = [];
+            $('.trtemp').each(function () {
+                checkLoopCode.push(
+                    $(this).find("#Code").val()
+                )
+                listProduct.push({
+                    Price: $(this).find("#Price").val(),
+                    Code: $(this).find("#Code").val(),
+                    Weight: $(this).find("#Weight").val(),
+                    Quantity: $(this).find("#Quantity").val(),
+                    Limited: $(this).find("#Limit").val()
+                })
+                listProductInfo.push({
+                    Name: $(this).find("#Name").val(),
+                    Barcode: $(this).find("#Barcode").val(),
+                    Description: $(this).find("#Description").val(),
+                    CategoryId: $(this).find(".CategoryInline").data("idcategory"),
+                    ImageId: $(this).find("#ImageId").val(),
+                })
+            })
+            var checkCode = true;
+            $(Array.from(new Set(checkLoopCode.filter((e, i, a) => a.indexOf(e) !== i)))).each((index,element) => {
+                $(".trtemp").find('input[name="LoopCode"]').each((key,v) => {
+                    if(element == v.value){
+                        v.style["border"] = "1px solid red";
+                        checkCode = false;
+                    }
+                })
+            })
+            if(!checkCode){
+                toastr.warning('Mã sản phẩm nhập vào bị trùng. Vui lòng kiểm tra lại.')
+                return;
+            }
+             
+            $(listProduct).each((i, pig) => $.each(pig, (k, v) => formData.append(`product[${i}].${k}`, v)))
+            $(listProductInfo).each((i, pig) => $.each(pig, (k, v) => formData.append(`productInfo[${i}].${k}`, v)))
+
+            $(".trtemp .Image").each((i, file) => {
+                if (file.files[0] == null) {
+                    formData.append(`existsImg[${i}]`, false)
+                }
+                else {
+                    formData.append(`existsImg[${i}]`, true)
+                    formData.append(`formFile`, file.files[0])
+                }
+            })
+            formData.append('idLivestream', $("#idLiveStream").val())
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("CreateListProduct", "Livestream")",
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function (response) {
+                    if (response.code == 0) {
+                        toastr.success("Thêm thành công");
+                        if ($("#product").length) {
+                            var option = new Option(response.data.code, response.data.id, true, true);
+                            option.setAttribute("data-price", response.data.price);
+                            $("#product").prepend(option);
+                            $("#price").text(response.data.price);
+                        }
+                        else {
+                            getListByFilter();
+                            countRow=0;
+                        }
+
+                    } else {
+                        toastr.warning(response.message);
+                    }
+                }
+            });
+        }
+    });
+
+    // Click save modal
+    $("#btnSave").click(function () {
+        var required = document.getElementById('add-contact').querySelectorAll("input[required]");
+        var checkRequired = required.length;
+        required.forEach(function (element) {
+            if (element.value.trim() == "") {
+                element.style["border"] = "1px solid red";
+                $("#Error").html(`<label>Vui lòng không được để trống trường báo đỏ.</label>`).show();
+            } else {
+                element.style["border"] = "1px solid #ced4da";
+                checkRequired = checkRequired - 1;
+            }
+        });
+
+        if (checkRequired == 0) {
+            $("#Error").hide();
+            var id = $("#mId").val();
+            var name = $("#mName").val();
+            var code = $("#mCode").val();
+            var weight = $("#mWeight").val();
+            var limit = $("#mLimit").val();
+            var barcode = $("#mBarcode").val();
+            var price = $("#mPrice").val();
+            var quantity = $("#mQuantity").val();
+            var description = $("#mDescription").val();
+            var categoryId = $("#mIdCategory").val();
+            var productInfoId = $("#mIdProductInfo").val();
+
+            if (categoryId == '') {
+                $("#Error").html(`<label>Vui lòng chọn lại danh mục.</label>`).show();
+            } else {
+                var fileUpload = $("#mImage").get(0).files[0];
+                var formData = new FormData();
+                if (fileUpload != null) {
+                    formData.append('formFile', fileUpload);
+                }
+
+                var productInfo = {
+                    Name: name,
+                    Barcode: barcode,
+                    Description: description,
+                    CategoryId: categoryId
+                }
+
+                $.each(productInfo, function (key, value) {
+                    formData.append(key, value);
+                })
+
+                var product =
+                {
+                    Id: id,
+                    Code: code,
+                    Weight: weight,
+                    Limited: limit,
+                    Price: price,
+                    Quantity: quantity,
+                    ProductInfoId: productInfoId
+                }
+
+                $.each(product, function (key, value) {
+                    formData.append(key, value);
+                })
+
+                var idLivestream = $("#idLiveStream").val();
+                formData.append('idLivestream', idLivestream);
+
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("CreateOrUpdateProduct", "Livestream")",
+                    contentType: false,
+                    processData: false,
+                    data: formData,
+                    success: function (response) {
+                        if (response.code == error.success.Code) {
+                            toastr.options.timeOut = 500;
+                            if (id == 0) {
+                                toastr.success("Thêm thành công");
+                                if ($("#product").length) {  // man hinh comment
+                                    var option = new Option(response.data.code, response.data.id, true, true);
+                                    option.setAttribute("data-price", response.data.price);
+                                    $("#product").prepend(option);  // add them san pham ben man hinh comment
+                                    $("#price").text(response.data.price);
+                                }
+                                else { // man hinh product
+                                // save data success goi ham load data product
+                                      getListByFilter();
+                                }
+                            } else {
+                                toastr.success("Cập nhật thành công");
+                                getListByFilter();
+                            }
+                            getListProductInfo();
+                            $("#add-contact").modal("hide");
+                            document.getElementById("formProduct").reset();
+                        } else {
+                            $("#Error").html(`<strong>Lỗi!</strong> ${response.message}`).show();
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    $(document).on("click", "#btnCreateOrUpdate", function () {
+        var id = $(this).data("id");
+        var __this = $(this).parents("tr");
+        var flag = true;
+        $(this).parents("tr").find("input[required]").each(function (index, element) {
+            if (element.value.trim() == '') {
+                element.style["border"] = "1px solid red";
+                flag = false;
+            } else {
+                element.style["border"] = "1px solid #ced4da";
+            }
+        });
+        !flag ? toastr.warning('Vui lòng nhập thông tin vào các trường báo đỏ.') : ''
+        if (flag) {
+
+            var formData = new FormData();
+            var ptr = $(this).parents("tr");
+            var fileUpload = ptr.find('.Image').get(0).files[0];
+            if (fileUpload != null) {
+                formData.append('formFile', fileUpload);
+            }
+            product = {
+                Price: ptr.find("#Price").val(),
+                Code: ptr.find("#Code").val(),
+                Weight: ptr.find("#Weight").val(),
+                Quantity: ptr.find("#Quantity").val(),
+                Limited: ptr.find("#Limit").val()
+            }
+            productInfo = {
+                Name: ptr.find("#Name").val(),
+                Barcode: ptr.find("#Barcode").val(),
+                Description: ptr.find("#Description").val(),
+                CategoryId:ptr.find(".CategoryInline").data("idcategory"),
+                ImageId: ptr.find("#ImageId").val()
+
+            }
+            var tempName = ptr.find("#Name").val();
+            var tempBarCode =  ptr.find("#Barcode").val();
+            var tempDesc = ptr.find("#Description").val();
+            var tempImg = ptr.find('img').attr('src');
+            var tempCat = ptr.find('.CategoryInline').val();
+
+            $.each(product, (k, v) => formData.append(k, v))
+            $.each(productInfo, (k, v) => formData.append(k, v))
+            formData.append('idLivestream', $("#idLiveStream").val())
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("CreateOrUpdateProduct", "Livestream")",
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function (response) {
+                    if (response.code == error.success.Code) {
+                        if (id == 0) {
+                            toastr.success("Thêm thành công");
+                            __this.remove();
+                            countRow--;
+                            countRow < 2 ? $('#group-btn-sr').attr('hidden', 'hidden'):''
+                            var row = `<tr class="tr-list-product">
+                                <td class="text-center stt">1</td>
+                                <td class="name">${tempName}</td>
+                                <td class="code text-center " data-fielddb="Code" data-id="${response.data.id}" tabindex="1" contenteditable="true">${response.data.code}</td>
+                                <td class="weight text-center" data-fielddb="Weight" data-id="${response.data.id}" tabindex="1" contenteditable="true">${response.data.weight}</td>
+                                <td class="barcode">${tempBarCode}</td>
+                                <td class="price  text-center" data-fielddb="Price" data-id="${response.data.id}" id="Price${response.data.id}"  tabindex="1" contenteditable="true">${Intl.NumberFormat().format(response.data.price)}đ</td>
+                                <td class="quantity text-center" data-fielddb="Quantity" data-id="${response.data.id}"  tabindex="1" contenteditable="true">${response.data.quantity}</td>
+                                <td class="text-center creup-hidden" hidden>0</td>
+                                <td class="limit text-center" data-fielddb="Limited" data-id="${response.data.id}"  tabindex="1" contenteditable="true">${response.data.limited}</td>
+                                <td class="logo${response.data.id}" data-id="${response.data.id}">
+                                    <span class="btn btn-file border-0 d-block-inline">
+                                        <img src="${tempImg}" width="55px" id="TblImage${response.data.id}">
+                                    <input type="file" class="TblImage" name="TblImage" data-id="${response.data.id}" data-imageid="${response.data.imageId}" />
+                                    </span>
+                                </td>
+                                <td class="category" data-name="${response.data.productInfo}">
+                                    <div class="searchable">
+                                        <input type="text" placeholder="Nhập danh mục" value="${tempCat}" class="CategoryInline" disabled />
+                                    </div>
+                                </td>
+                                <td class="description" data-fielddb="Description" data-id="${response.data.id}"  tabindex="1" contenteditable="true">${tempDesc}</td>
+                                 <td class="action text-center creup-hidden" hidden>
+                                    <button id="edit" class="btn btn-success btn-sm rounded-0" type="button" data-toggle="modal" data-target="#add-contact" data-toggle="tooltip" data-placement="top" title="Sửa" data-id="${response.data.id}" data-idcategory="${response.data.categoryId}"><i class="fa fa-edit"></i></button>
+                                    <button onclick="UpdateStatus('${response.data.id}', 'Deleted')" class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Xóa"><i class="fa fa-trash"></i></button>
+                                    <input type="hidden" class="id" value="${response.data.id}${response.data.id}" />
+                                    <input type="hidden" class="idCategory" value="${response.data.categoryId}" />
+                                </td>
+                            </tr>`;
+                            $(`table tbody tr:nth-child(${countRow+1})`).after(row);
+                            tempImg = ''; tempCat = '';  tempName = '';tempBarCode =  '';tempDesc = '';
+                            if (countRow == 0) {
+                                $('.creup-hidden').removeAttr("hidden")
+                            }
+                            $('.stt').each(function (i) {
+                                $(this).html(i+1)
+                            })
+
+                            if ($("#product").length) {  // man hinh comment
+                                var option = new Option(response.data.productInfo.code, response.data.id, true, true);
+                                    option.setAttribute("data-price", response.data.price);
+                                    $("#product").prepend(option);  // add them san pham ben man hinh comment
+                                    $("#price").text(response.data.price);
+                            }
+                            else { // man hinh product
+                                // save data success goi ham load data product
+                                //getListByFilter();
+                            }
+                        } else {
+                            toastr.success("Cập nhật thành công");
+                            getListByFilter();
+                        }
+                    } else {
+                        toastr.warning(response.message);
+                    }
+                }
+            });
+
+        }
+    });
+
+    $(document).on("click", "#cancel", function () {
+        $(this).parents("tr").remove();
+        countRow--;
+        countRow < 2 ? $('#group-btn-sr').attr('hidden', 'hidden'):''
+        countRow == 0 ? $('.creup-hidden').removeAttr("hidden") : ''
+    });
+
+    $(document).on("click", "#group-btn-sr #RemoveAll", function () {
+        $('.trtemp').remove();
+        countRow = 0;
+        $('#group-btn-sr').attr('hidden', 'hidden')
+        $('.creup-hidden').removeAttr("hidden")
+
+    })
+    //
+    $(document).on("change", ".Image", function () {
+        var that = $(this).data("idtr");
+        var reader = new FileReader();
+        reader.readAsDataURL($("#Image" + that).get(0).files[0]);
+        reader.onload = function () {
+            $('.btn-select-upload .changeImg' + that).removeClass('btn-success')
+            $('.btn-select-upload .changeImg' + that).html(`<img src="${reader.result}" width="55"/> `);
+        };
+    })
+
+    function getListProductInfo() {
+        var storeId = $("#mStoreId").val();
+        $.ajax({
+            url: "/Livestream/GetListProductInfoByStore",
+            data: {
+                idStore: storeId
+            },
+            type: 'POST',
+            dataType: 'json',
+            success: function (result) {
+                console.log(result);
+                $("#divProductInfo").children().remove();
+                result.forEach(function (item) {
+                    var html = `<div class="ProductId">${item.id}</div>
+                                <div class="ProductName">${item.name}</div>
+                                <div class="ProductCode">${item.product[item.product.length - 1].code}</div>
+                                <div class="ProductBarCode">${item.barcode}</div>
+                                <div class="ProductPrice">${item.product[item.product.length - 1].price}</div>
+                                <div class="ProductWeight">${item.product[item.product.length - 1].weight}</div>
+                                <div class="ProductQuantity">${item.product[item.product.length - 1].quantity}</div>
+                                <div class="ProductLimited">${item.product[item.product.length - 1].limited}</div>
+                                <div class="ProductDescription">${(item.description == null ? "" : item.description)}</div>
+                                <div class="ProCateId">${item.category.id}</div>
+                                <div class="ProCateName">${item.category.name}</div>
+                                <div class="ProductImage">${(item.image == null ? "" : item.image.fileUrl)}</div>
+                                `;
+                    $("#divProductInfo").append(html);
+                });
+            }
+        });
+    }
+
+    //////// Start Auto Complete ProductInfo //////////
+    var listProduct = [];
+    function listProductOfDivProductInfo() {
+        var listProductId = document.getElementsByClassName('ProductId');
+        var listProductName = document.getElementsByClassName('ProductName');
+        var listProductCode = document.getElementsByClassName('ProductCode');
+        var listProductBarCode = document.getElementsByClassName('ProductBarCode');
+        var listProductPrice = document.getElementsByClassName('ProductPrice');
+        var listProductWeight = document.getElementsByClassName('ProductWeight');
+        var listProductQuantity = document.getElementsByClassName('ProductQuantity');
+        var listProductLimited = document.getElementsByClassName('ProductLimited');
+        var listProductDescription = document.getElementsByClassName('ProductDescription');
+        var listProCateId = document.getElementsByClassName('ProCateId');
+        var listProCateName = document.getElementsByClassName('ProCateName');
+        var listProductImage = document.getElementsByClassName('ProductImage');
+        for (var i = 0; i < listProductId.length; i++) {
+            listProduct.push({
+                id: listProductId[i].innerHTML,
+                name: listProductName[i].innerHTML,
+                code: listProductCode[i].innerHTML,
+                barcode: listProductBarCode[i].innerHTML,
+                price: listProductPrice[i].innerHTML,
+                weight: listProductWeight[i].innerHTML,
+                quantity: listProductQuantity[i].innerHTML,
+                limited: listProductLimited[i].innerHTML,
+                description: listProductDescription[i].innerHTML,
+                categoryId: listProCateId[i].innerHTML,
+                categoryName: listProCateName[i].innerHTML,
+                productImage: listProductImage[i].innerHTML
+            });
+        }
+    }
+
+    $("#Product").on("click", function () {
+        var valueInput = $(this).val();
+        $(".item").remove();
+        listProduct = [];
+        listProductOfDivProductInfo();
+        listProduct.forEach(element => {
+            if (valueInput == '') {
+                $("#listProduct").append(`<div class="row item">
+                                            <div id="divImgProductModal" class="col-11" onclick="selectValueInputProduct('${element.id}','${element.name}','${element.code}','${element.barcode}','${element.price}','${element.weight}','${element.quantity}','${element.limited}','${element.description}','${element.categoryName}','${element.categoryId}','${element.productImage}')">
+                                                <div class="row">
+                                                    <div class="col-2">
+                                                        <img id="imgProductModal" src="${(element.productImage == "" ? "/images/defaults/images.png" : element.productImage)}" alt="">
+                                                    </div>
+                                                    <div class="col-10">
+                                                       <span style="font-weight: bold;">${element.name}: ${Intl.NumberFormat().format(element.price)} đ</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="divbtnDeleteProductModal" class="col-1">
+                                                <button id="btn-DeleteProductInfo" class="btn btn-danger btn-sm rounded-0 deleteProductInfo" type="button" data-toggle="tooltip" data-placement="top" title="" data-original-title="Xóa">X</button>
+                                                <input hidden="hidden" type="text" class="idProductInfo" value="${element.id}">
+                                            </div>
+                                        </div>`)
+            } else {
+                if (element.name.toLowerCase().includes(valueInput.toLowerCase()) == true) {
+                    $("#listProduct").append(`<div class="row item">
+                                                <div id="divImgProductModal" class="col-11" onclick="selectValueInputProduct('${element.id}','${element.name}','${element.code}','${element.barcode}','${element.price}','${element.weight}','${element.quantity}','${element.limited}','${element.description}','${element.categoryName}','${element.categoryId}','${element.productImage}')">
+                                                    <div class="row">
+                                                        <div class="col-2">
+                                                            <img id="imgProductModal" src="${(element.productImage == "" ? "/images/defaults/images.png" : element.productImage)}" alt="">
+                                                        </div>
+                                                        <div class="col-10">
+                                                           <span style="font-weight: bold;">${element.name}: ${Intl.NumberFormat().format(element.price)} đ</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div id="divbtnDeleteProductModal" class="col-1">
+                                                    <button id="btn-DeleteProductInfo" class="btn btn-danger btn-sm rounded-0 deleteProductInfo" type="button" data-toggle="tooltip" data-placement="top" title="" data-original-title="Xóa">X</button>
+                                                    <input hidden="hidden" type="text" class="idProductInfo" value="${element.id}">
+                                                </div>
+                                            </div>`)
+                }
+            }
+        });
+    });
+
+    $("#Product").on("keyup", function () {
+        $("#mId, #mName, #mCode, #mWeight, #mBarcode, #mDescription, #mPrice, #mImage, #Category, #mLimit, #mQuantity, #mIdProductInfo, #mIdCategory").val("");
+        $("#mName, #mBarcode, #Category").prop("disabled", false);
+        $("#select-image").attr("src", "");
+        var valueInput = $(this).val();
+        $(".item").remove();
+        listProduct = [];
+        listProductOfDivProductInfo();
+        listProduct.forEach(element => {
+            if (valueInput == '') {
+                $("#listProduct").append(`<div class="row item">
+                                            <div id="divImgProductModal" class="col-11" onclick="selectValueInputProduct('${element.id}','${element.name}','${element.code}','${element.barcode}','${element.price}','${element.weight}','${element.quantity}','${element.limited}','${element.description}','${element.categoryName}','${element.categoryId}','${element.productImage}')">
+                                                <div class="row">
+                                                    <div class="col-2">
+                                                        <img id="imgProductModal" src="${(element.productImage == "" ? "/images/defaults/images.png" : element.productImage)}" alt="">
+                                                    </div>
+                                                    <div class="col-10">
+                                                       <span style="font-weight: bold;">${element.name}: ${Intl.NumberFormat().format(element.price)} đ</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="divbtnDeleteProductModal" class="col-1">
+                                                <button id="btn-DeleteProductInfo" class="btn btn-danger btn-sm rounded-0 deleteProductInfo" type="button" data-toggle="tooltip" data-placement="top" title="" data-original-title="Xóa">X</button>
+                                                <input hidden="hidden" type="text" class="idProductInfo" value="${element.id}">
+                                            </div>
+                                        </div>`)
+            } else {
+                if (element.name.toLowerCase().includes(valueInput.toLowerCase()) == true) {
+                    $("#listProduct").append(`<div class="row item">
+                                                <div id="divImgProductModal" class="col-11" onclick="selectValueInputProduct('${element.id}','${element.name}','${element.code}','${element.barcode}','${element.price}','${element.weight}','${element.quantity}','${element.limited}','${element.description}','${element.categoryName}','${element.categoryId}','${element.productImage}')">
+                                                    <div class="row">
+                                                        <div class="col-2">
+                                                            <img id="imgProductModal" src="${(element.productImage == "" ? "/images/defaults/images.png" : element.productImage)}" alt="">
+                                                        </div>
+                                                        <div class="col-10">
+                                                           <span style="font-weight: bold;">${element.name}: ${Intl.NumberFormat().format(element.price)} đ</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div id="divbtnDeleteProductModal" class="col-1">
+                                                    <button id="btn-DeleteProductInfo" class="btn btn-danger btn-sm rounded-0 deleteProductInfo" type="button" data-toggle="tooltip" data-placement="top" title="" data-original-title="Xóa">X</button>
+                                                    <input hidden="hidden" type="text" class="idProductInfo" value="${element.id}">
+                                                </div>
+                                            </div>`)
+                }
+            }
+        });
+    });
+
+    function selectValueInputProduct(id, name, code, barcode, price, weight, quantity, limited, description, categoryName, categoryId, productImage) {
+        $("#mName, #mBarcode, #Category").prop("disabled", true);
+        $("#select-image").attr("src", productImage);
+        $("#mIdProductInfo").val(id);
+        $("#Product").val(name.trim());
+        $("#Category").val(categoryName.trim());
+        $("#mIdCategory").val(categoryId);
+        $("#mCode").val(code.trim());
+        $("#mBarcode").val(barcode.trim());
+        $("#mPrice").val(price.trim());
+        $("#mWeight").val(weight.trim());
+        $("#mQuantity").val(quantity.trim());
+        $("#mLimit").val(limited.trim());
+        $("#mDescription").val(description.trim());
+        $("#mName").val(name.trim());
+        $(".item").remove();
+    }
+
+    //////// End Auto Complete ProductInfo //////////
+
+
+    //////// Start Auto Complete Category //////////
+    var listCategory = [];
+    var listCategoryId = document.getElementsByClassName('CategoryId');
+    var listCategoryName = document.getElementsByClassName('CategoryName');
+    for (var i = 0; i < listCategoryId.length; i++) {
+        listCategory.push({
+            id: listCategoryId[i].innerHTML,
+            name: listCategoryName[i].innerHTML
+        });
+    }
+
+    $("#Category").click(function () {
+        var valueInput = $(this).val();
+        $(".item").remove();
+        listCategory.forEach(element => {
+            if (valueInput == '') {
+                $("#listCategory").append(`<div onclick="selectValueInputCategory('${element.id}','${element.name}')" class="item">${element.name}</div>`)
+            } else {
+                if (element.name.toLowerCase().includes(valueInput.toLowerCase()) == true) {
+                    $("#listCategory").append(`<div onclick="selectValueInputCategory('${element.id}','${element.name}')" class="item">${element.name}</div>`)
+                }
+            }
+        });
+    });
+
+    $("#Category").keyup(function () {
+        var valueInput = $(this).val();
+        $("#mIdCategory, #IdCategory").val("");
+        $(".item").remove();
+        listCategory.forEach(element => {
+            if (valueInput == '') {
+                $("#listCategory").append(`<div onclick="selectValueInputCategory('${element.id}','${element.name}')" class="item">${element.name}</div>`)
+            } else {
+                if (element.name.toLowerCase().includes(valueInput.toLowerCase()) == true) {Z
+                    $("#listCategory").append(`<div onclick="selectValueInputCategory('${element.id}','${element.name}')" class="item">${element.name}</div>`)
+                }
+            }
+        });
+    });
+
+    $(window).on("click.Bst", function (event) {
+        if (
+            $("#Category, #Product, .deleteProductInfo").has(event.target).length == 0 //checks if descendants of $box was clicked
+            &&
+            !$("#Category, #Product, .deleteProductInfo").is(event.target) //checks if the $box itself was clicked
+        ) {
+            $(".item").remove();
+        }
+    });
+
+    function selectValueInputCategory(id, name) {
+        $("#Category").val(name.trim());
+        $("#mIdCategory").val(id);
+        $(".item").remove();
+    }
+
+    //////// End Auto Complete Category //////////
+
+    // convert image to base64
+    function encodeImageFileAsURL(cb) {
+        return function () {
+            var file = this.files[0];
+            var reader = new FileReader();
+            reader.onloadend = function () {
+                cb(reader.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    /////////////////////////////////////
+
+    $("#listProduct").on("click", "#btn-DeleteProductInfo", function () {
+        var current = $(this).closest(".item");
+        var idProductInfo = current.find(".idProductInfo").val();
+        $.ajax({
+            type: "POST",
+            url: "/Livestream/UpdateStatusProductInfo/" + idProductInfo,
+            data: {
+                eProductStatus: 'Deleted'
+            },
+            success: function (data) {
+                if (data.code == error.success.Code) {
+                    current.remove();
+                    toastr.options.timeOut = 500;
+                    toastr.success("Xóa thành công");
+                }
+            }
+        })
+    });
+
+    ////////////////////////////////////
+
+    $(".DelInRow").click(function () {
+        var __this = $(this);
+        $.ajax({
+            type: "POST",
+            url: "/Livestream/UpdateStatusProductInfo/" + __this.data("id"),
+            data: {
+                eProductStatus: 'Deleted'
+            },
+            success: function (data) {
+                if (data.code == error.success.Code) {
+                    __this.parents("li").remove();
+                    toastr.success("Xóa thành công");
+                }
+            }
+        })
+    });
+    ////////////////////////////////////
+
+    $(document).on('click', '.CategoryInline', function () {
+        let container, input, filter, li, input_val;
+        container = $(this).closest(".searchable");
+        input_val = container.find("input").val().toUpperCase();
+        if (["ArrowDown", "ArrowUp", "Enter"].indexOf(event.key) != -1) {
+            keyControl(event, container)
+        } else {
+            li = container.find("ul li");
+            li.each(function (i, obj) {
+                if ($(this).text().toUpperCase().indexOf(input_val) > -1) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            container.find("ul li").removeClass("selected");
+            setTimeout(function () {
+                container.find("ul li:visible").first().addClass("selected");
+            }, 100)
+        }
+    }).on('keyup', '.CategoryInline', function () {
+        let container, input, filter, li, input_val;
+        container = $(this).closest(".searchable");
+        input_val = container.find("input").val().toUpperCase();
+        if (["ArrowDown", "ArrowUp", "Enter"].indexOf(event.key) != -1) {
+            keyControl(event, container)
+        } else {
+            li = container.find("ul li");
+            li.each(function (i, obj) {
+                if ($(this).text().toUpperCase().indexOf(input_val) > -1) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            container.find("ul li").removeClass("selected");
+            setTimeout(function () {
+                container.find("ul li:visible").first().addClass("selected");
+            }, 0)
+        }
+    })
+
+    function keyControl(e, container) {
+        if (e.key == "ArrowDown") {
+            if (container.find("ul li").hasClass("selected")) {
+                if (container.find("ul li:visible").index(container.find("ul li.selected")) + 1 < container.find("ul li:visible").length) {
+                    container.find("ul li.selected").removeClass("selected").nextAll().not('[style*="display: none"]').first().addClass("selected");
+                }
+            } else {
+                container.find("ul li:first-child").addClass("selected");
+            }
+        } else if (e.key == "ArrowUp") {
+            if (container.find("ul li:visible").index(container.find("ul li.selected")) > 0) {
+                container.find("ul li.selected").removeClass("selected").prevAll().not('[style*="display: none"]').first().addClass("selected");
+            }
+        } else if (e.key == "Enter") {
+            container.find("input").val(container.find("ul li.selected").text()).blur();
+        }
+        container.find("ul li.selected")[0].scrollIntoView({
+            behavior: "smooth",
+        });
+    }
+
+    $(document).on("focus", ".searchable input", function () {
+        $(this).closest(".searchable").find("ul").show();
+        $(this).closest(".searchable").find("ul li").show();
+    });
+    $(document).on("blur", ".searchable input", function () {
+        let that = this;
+        setTimeout(function () {
+            $(that).closest(".searchable").find("ul").hide();
+        }, 300);
+    });
+
+    $(document).on("click", ".searchable ul li", function () {
+        $(this).closest(".searchable").find("input").val($(this).text()).blur();
+        $(this).val($(this).text())
+        var catid = $(this).data("categoryid")
+        // set value for data-idcat input
+        $(this).closest(".searchable").find("input").data("idcategory", catid)
+    });
+
+    $(document).on("hover", ".searchable ul li", function () {
+        $(this).closest(".searchable").find("ul li.selected").removeClass("selected");
+        $(this).addClass("selected");
+    });
+
+    ///// ProductInline //////
+    $('.ProductInline').keyup(function () {
+        let container, input, filter, li, input_val;
+        container = $(this).closest(".searchSLP");
+        input_val = container.find("input").val().toUpperCase();
+        if (["ArrowDown", "ArrowUp", "Enter"].indexOf(event.key) != -1) {
+            keyControl(event, container)
+        } else {
+            li = container.find("ul li");
+            li.each(function (i, obj) {
+                if ($(this).text().toUpperCase().indexOf(input_val) > -1) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            container.find("ul li").removeClass("selected");
+            setTimeout(function () {
+                container.find("ul li:visible").first().addClass("selected");
+            }, 0)
+        }
+    })
+
+    //////  Upload anh truc tiep  /////////
+    $(document).on('change', '.TblImage', function(){
+        var __this = $(this);
+        var __that = $(this).data("id");
+        var formFile = new FormData();
+        formFile.append('formFile', $(this)[0].files[0]);
+
+        var product = {
+            Id: $(this).data("id"),
+            idLiveStream: $("#idLiveStream").val(),
+            ImageId: $(this).data("imageid")
+        }
+        $.each(product, function (k, v) {
+            formFile.append(k, v);
+        })
+
+        if (formFile != null) {
+            $.ajax({
+                url: "@Url.Action("UpdateOneFieldProduct", "Livestream")",
+                type: "POST",
+                data: formFile,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.code == 0) {
+                        var reader = new FileReader();
+                        reader.readAsDataURL(__this.get(0).files[0]);
+                        reader.onload = function () {
+                            $('#TblImage' + __that).attr('src', reader.result);
+                        };
+                        toastr.success("Đã cập lại ảnh sản phẩm.");
+                    } else {
+                        toastr.warning(response.message);
+                    }
+                    $('.TblImage').trigger('reset');
+                }
+            });
+        }
+    })
+    // Cap nhat truc tiep
+    $(document).on('focus', '[data-fielddb]', function () {
+        $(this).css({ "color": "#000", "text-decoration": "none" })
+        $(this).keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == '13') {
+                e.preventDefault();
+            }
+        });
+        if (this.dataset.fielddb == "Price") {
+            $(this).html($(this).html()
+                .replace(/,/g, '')
+                .replace(/đ/g, ''))
+        }
+        this.__html = $(this).html().trim();
+    }).on('blur', '[data-fielddb]', function () {
+        var data = {
+            col: this.dataset.fielddb,
+            id: this.dataset.id,
+            html: this.innerHTML
+                .replace(/&nbsp;/g, '')
+        };
+
+        if (data.html == '' || data.html <= 0) {
+            toastr.warning("Vui lòng kiểm tra lại thông tin đã sửa.");
+            return;
+        }
+        if (data.col == 'Price' || data.col == 'Weight' || data.col == 'Quantity' || data.col == 'Limited') {
+            var numberRegex = /^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$/;
+            if (!numberRegex.test(data.html)) {
+                toastr.warning("Vui lòng nhập số.");
+                $(this).css({ "color": "red", "text-decoration": "line-through" })
+                return;
+            }
+        }
+        if (this.__html === data.html) {
+            if (data.col == "Price") {
+                $(`#Price${data.id}`).text(Intl.NumberFormat().format(data.html) + 'đ');
+            }
+            return;
+        }
+        var __this = $(this);
+        // Call Ajax
+        var formFile = new FormData();
+        if([data.col] == "Description"){
+            var productInfo = {
+                Id: $(this).data("id"),
+                [data.col]: data.html
+            }
+            $.each(productInfo, function(key, value){
+                formFile.append(key, value)
+            })
+        } else {
+            var product = {
+                Id: $(this).data("id"),
+                [data.col]:data.html
+            }
+            $.each(product, function(key, value){
+                formFile.append(key, value)
+            })
+        }
+        formFile.append('idLivestream', $("#idLiveStream").val())
+
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("UpdateOneFieldProduct", "Livestream")",
+            data: formFile,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                if (response.code == 8) {
+                    toastr.warning(response.message);
+                    __this.css({ "color": "red", "text-decoration": "line-through" })
+                } else {
+                    if (response.code == error.success.Code) {
+                        toastr.success("Đã cập nhật lại thông tin sản phẩm.");
+                        if (data.col == "Price") {
+                            $(`#Price${data.id}`).text(Intl.NumberFormat().format(data.html) + 'đ');
+                        }
+                    }
+                    else {
+                        toastr.warning(response.message);
+                    }
+                }
+            }
+        })
+    })
+    var priceName = document.getElementsByClassName('SePrice');
+    for (var i = 0; i < priceName.length; i++) {
+        priceName[i].innerHTML = Intl.NumberFormat().format(priceName[i].innerHTML) + " đ";
+    }
+
+</script>

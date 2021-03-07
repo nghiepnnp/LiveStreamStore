@@ -1,0 +1,365 @@
+﻿@model List<Lib.Data.DBContext.Models.Product>
+@using LiveStreamStore.Lib.Data.DBContext.Models;
+@using Microsoft.AspNetCore.Http;
+
+@{
+    List<Category> listCategory = ViewBag.ListCategory;
+}
+<style>
+    @@media only screen and (min-device-width: 320px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+        .hide-on-mobile {
+            display: none
+        }
+    }
+
+    .searchable, .searchSLP {
+        position: relative;
+    }
+
+        .searchable input {
+            position: relative;
+            width: 100%;
+            height: 37px;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            display: block;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: none;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+
+        .searchable ul {
+            position: absolute;
+            min-width: 12em;
+            z-index: 98;
+            display: none;
+            list-style-type: none;
+            background-color: #fff;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #add8e6;
+            max-height: 280px;
+            margin: 0;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            padding: 0;
+        }
+
+            .searchable ul li {
+                padding: 7px 9px;
+                border-bottom: 1px solid #e1e1e1;
+                cursor: pointer;
+                color: #6e6e6e;
+            }
+
+                .searchable ul li.selected {
+                    background-color: #e8e8e8;
+                    color: #333;
+                }
+
+
+        .searchSLP input {
+            position: relative;
+            width: 100%;
+            height: 47px;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            display: block;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: none;
+            border-bottom: 2px solid #add8e6;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+
+        .searchSLP ul {
+            position: absolute;
+            width: 100%;
+            z-index: 98;
+            display: none;
+            list-style-type: none;
+            background-color: #fff;
+            border: 1px solid #add8e6;
+            border-bottom: none;
+            max-height: 493px;
+            margin: 0;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            padding: 0;
+        }
+
+            .searchSLP ul li {
+                padding: 20px 9px;
+                border-bottom: 1px solid #e1e1e1;
+                cursor: pointer;
+                color: #6e6e6e;
+            }
+
+                .searchSLP ul li:hover {
+                    background-color: #eee;
+                    color: #333;
+                }
+
+    #chibtnCOW {
+        visibility: hidden;
+        display: none;
+    }
+        #btnCOW:hover #chibtnCOW {
+            margin-top:-37px;
+            visibility: visible;
+            display: block;
+        }
+
+    #btnSelectOldP span, #btnCreate span {
+        position: relative;
+        z-index: 1;
+    }
+
+    #btnSelectOldP, #btnCreate {
+        border: none;
+        text-align: center;
+        cursor: pointer;
+        text-transform: uppercase;
+        outline: none;
+        overflow: hidden;
+        position: relative;
+        color: #fff;
+        font-weight: 700;
+        font-size: 13px;
+        background-color: #222;
+        padding: 10px 40px;
+        margin: 0 auto;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.20);
+    }
+
+        #btnSelectOldP:after, #btnCreate:after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 490%;
+            width: 140%;
+            background: #78c7d2;
+            -webkit-transition: all .5s ease-in-out;
+            transition: all .5s ease-in-out;
+            -webkit-transform: translateX(-98%) translateY(-25%) rotate(45deg);
+            transform: translateX(-98%) translateY(-25%) rotate(45deg);
+        }
+
+        #btnSelectOldP:hover:after, #btnCreate:hover:after {
+            -webkit-transform: translateX(-9%) translateY(-25%) rotate(45deg);
+            transform: translateX(-9%) translateY(-25%) rotate(45deg);
+        }
+</style>
+
+@if (Model.Any())
+{
+    <div id="Error" hidden>er</div>
+
+    <div class="table-responsive">
+        <table id="demo-foo-addrow" class="table table-hover nowrap">
+            <thead>
+                <tr class="footable-header text-center">
+                    <th>
+                        <div id="btnCOW">
+                            <button class="btn float-left" data-toggle="tooltip" data-placement="top" title="" data-original-title=""><i class="fas fa-plus d-inline text-success"></i></button>
+                            <div class="position-absolute float-left" id="chibtnCOW">
+                                <button id="btnSelectOldP" data-toggle="tooltip" data-placement="top" title="" data-original-title=""><span><i class="fas fa-mouse-pointer d-inline text-white fa-sm"></i>&nbsp;CHỌN LẠI SẢN PHẨM</span></button>
+                                <button id="btnCreate" data-toggle="tooltip" data-placement="top" title="" data-original-title=""><span><i class="fas fa-plus d-inline text-white fa-sm"></i>&nbsp;TẠO MỚI</span></button>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="min-width:7em">Tên</th>
+                    <th>Mã</th>
+                    <th>Cân Nặng</th>
+                    <th>Barcode</th>
+                    <th>Giá</th>
+                    <th>Số Lượng</th>
+                    <th class="creup-hidden">Số Lượng Đã Bán</th>
+                    <th>Số Lượng Mua Giới Hạn(/người)</th>
+                    <th>Ảnh</th>
+                    <th style="min-width:8em">Danh Mục</th>
+                    <th style="max-width:8em">Mô Tả</th>
+                    <th class="footable-last-visible creup-hidden" style="min-width:7em">Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="group-btn-sr" hidden><td colspan="11"><button id="InsertListProduct" class="btn btn-outline-primary btn-sm rounded-0 mr-1">SAVE ALL</button><button id="RemoveAll" class="btn btn-outline-danger btn-sm rounded-0">REMOVE ALL</button></td></tr>
+                @{
+                    var stt = 1;
+                    foreach (var item in Model)
+                    {
+                        <tr class="tr-list-product text-center">
+                            <td class="text-center stt">@stt</td>
+                            <td class="name">@item.ProductInfo.Name</td>
+                            <td class="code" data-fielddb="Code" data-id="@item.Id">@item.Code</td>
+                            <td class="weight" data-fielddb="Weight" data-id="@item.Id">@item.Weight</td>
+                            <td class="barcode">@item.ProductInfo.Barcode</td>
+                            <td class="price" data-fielddb="Price" data-id="@item.Id" id="Price@(item.Id)">@item.Price</td>
+                            <td class="quantity" data-fielddb="Quantity" data-id="@item.Id">@item.Quantity</td>
+                            <td class="text-center creup-hidden">@(item.NumberProductSold == null ? 0 : item.NumberProductSold)</td>
+                            <td class="limit" data-fielddb="Limited" data-id="@item.Id">@item.Limited</td>
+                            @{
+                                if (item.ProductInfo.Image != null)
+                                {
+                                    <td>
+                                        <span class="btn btn-file border-0 d-block-inline">
+                                            <img src="@item.ProductInfo.Image.FileUrl" width="55px" id="TblImage@(item.Id)" class="click-img">
+                                            <input type="file" class="TblImage" name="TblImage" data-id="@item.Id" data-imageid="@item.ProductInfo.ImageId" />
+                                        </span>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>
+                                        <span class="btn btn-file border-0 d-block-inline">
+                                            <img src="/images/defaults/images.png" width="55px" height="55px" id="TblImage@(item.Id)" class="click-img">
+                                            <input type="file" class="TblImage" name="TblImage" data-id="@item.Id" data-imageid="@item.ProductInfo.ImageId" />
+                                        </span>
+                                    </td>
+                                }
+                            }
+
+                            <td class="category" data-name="@item.ProductInfo.Category.Name">
+                                <div class="searchable">
+                                    <input type="text" placeholder="Nhập danh mục" value="@item.ProductInfo.Category.Name" class="CategoryInline" disabled />
+                                    <ul>
+                                        @foreach (var cat in ViewBag.GetAllCategory)
+                                        {
+                                            if (item.ProductInfo.Category.Id == cat.Id)
+                                            {
+                                                <li data-id="@item.Id" class="selected" data-categoryid="@cat.Id">@cat.Name</li>
+                                            }
+                                            else
+                                            {
+                                                <li data-id="@item.Id" data-categoryid="@cat.Id">@cat.Name</li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+
+
+                            </td>
+
+                            <td class="description" data-fielddb="Description" data-id="@item.Id">@item.ProductInfo.Description</td>
+                            <td class="action text-center creup-hidden">
+                                <button id="edit" class="btn btn-success btn-sm rounded-0" type="button" data-toggle="modal" data-target="#add-contact" data-toggle="tooltip" data-placement="top" title="Sửa" data-id="@item.Id" data-idcategory="@item.ProductInfo.CategoryId"><i class="fa fa-edit"></i></button>
+                                <button onclick="UpdateStatus('@item.Id', 'Deleted')" class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Xóa"><i class="fa fa-trash"></i></button>
+                                <input type="hidden" class="id" value="@item.Id" />
+                                <input type="hidden" class="idCategory" value="@item.ProductInfo.CategoryId" />
+                            </td>
+                        </tr>
+                        stt++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+<script>
+    // click button Cập nhật thông tin sản phẩm
+    $("#demo-foo-addrow").on('click', '#edit', function () {
+
+        $("#myModalLabel").text("Cập Nhật Sản Phẩm");
+        $("#Error, #divChonSanPham").hide();
+        $("#mName, #mBarcode, #Category").prop("disabled", true);
+
+        // get the current row
+        var currentRow = $(this).closest(".tr-list-product");
+
+        var id = currentRow.find(".id").val();
+        var name = currentRow.find(".name").text();
+        var code = currentRow.find(".code").text();
+        var weight = currentRow.find(".weight").text();
+        var price = currentRow.find(".price").text().replace(/,/g, '').replace(/đ/g, '');
+        var quantity = currentRow.find(".quantity").text();
+        var limit = currentRow.find(".limit").text();
+        var barcode = currentRow.find(".barcode").text();
+        var description = currentRow.find(".description").text();
+        var category = currentRow.find(".category .CategoryInline").val();
+        var categoryId = currentRow.find(".idCategory").val();
+
+        var fileUrlImage = currentRow.find(".click-img").attr('src');
+
+        if (fileUrlImage === undefined) {
+            $("#select-image").attr("src", "");
+        } else {
+            $("#select-image").attr("src", fileUrlImage);
+        }
+
+        $("#mId").val(id);
+        $("#mName").val(name);
+        $("#mCode").val(code);
+        $("#mWeight").val(weight);
+        $("#mPrice").val(price);
+        $("#mQuantity").val(quantity);
+        $("#mLimit").val(limit);
+        $("#mBarcode").val(barcode);
+        $("#mDescription").val(description);
+        $("#Category").val(category.trim());
+        $("#mIdCategory").val(categoryId);
+        $("#mImage, #mIdProductInfo").val("");
+
+        var required = document.querySelectorAll("input[required]");
+        required.forEach(function (element) {
+            element.style["border"] = "1px solid #ced4da";
+        });
+    });
+
+    //<!__=>
+
+    var priceName = document.getElementsByClassName('price');
+    for (var i = 0; i < priceName.length; i++) {
+        priceName[i].innerHTML = Intl.NumberFormat().format(priceName[i].innerHTML) + "đ";
+    }
+
+    function UpdateStatus(id, eProductStatus) {
+        swal({
+            title: "Bạn có chắc chắn xóa?",
+            text: "Khi xóa, bạn sẽ không thể khôi phục lại",
+            icon: "error",
+            buttons: true,
+            dangerMode: true
+        }).then((clickYes) => {
+            if (clickYes) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Livestream/UpdateStatusProduct/" + id,
+                    data: {
+                        eProductStatus: eProductStatus
+                    },
+                    success: function (data) {
+                        if (data.code == error.success.Code) {
+                            toastr.options.timeOut = 500;
+                            toastr.success("Xóa thành công");
+                            getListByFilter();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="modal"]').tooltip();
+    })
+
+    $('#btnSelectOldP').click(function(){
+        $('#ModalSelectP').modal('show')
+    })
+    $('#btnCOW button').click(function () {
+        $('#chibtnCOW').addClass('display', 'block')
+    })
+    
+</script>

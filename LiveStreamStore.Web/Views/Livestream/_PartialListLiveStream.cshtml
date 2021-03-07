@@ -1,0 +1,207 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.ResultLiveStreamFilter>
+@{
+    var TimeZone = int.Parse(ViewBag.CurrentTimeZoneOffSet);
+}
+<style>
+    /* ipad mini */
+    @@media only screen and (min-device-width: 320px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+        .hide-on-mobile {
+            display: none;
+        }
+    }
+
+    .link:hover {
+        cursor : pointer;
+        color : blue;
+    }
+</style>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table id="demo-foo-addrow" class="table table-hover no-wrap">
+            <thead>
+                <tr class="footable-header text-center">
+                    <th>STT</th>
+                    <th>Link</th>
+                    <th>Thời Gian Bắt Đầu Livestream</th>
+                    <th>Ngày Tạo</th>
+                    <th>Mô Tả</th>
+                    <th>Tổng (Đơn Hàng/Sản Phẩm) Bán Trước Khi Livestream</th>
+                    <th>Tổng (Đơn Hàng/Sản Phẩm) Bán Khi Livestream</th>
+                    <th>Trạng Thái</th>
+                    <th class="footable-last-visible" width="10%">Hành Động</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @{foreach (var item in Model)
+                    {
+                        <tr class="tr-list-livestream text-center">
+                            <td>@item.Row</td>
+                            <td class="link" data-toggle="tooltip" title="@item.Link">@item.Link</td>
+                            <td>@item.LivestreamStartTime</td>
+                            <td>@item.CreatedDateUtc?.AddSeconds(TimeZone)</td>
+                            <td class="description">@item.Description</td>
+                            <td style="font-size: x-large;"><span class="text-danger text-semibold"><i class="fa fa-level-down" aria-hidden="true"></i> @item.TotalOrderPreSale/@item.TotalProductPreSale</span></td>
+                            <td style="font-size: x-large;"><span class="text-info text-semibold"><i class="fa fa-level-up" aria-hidden="true"></i> @item.TotalOrderSaleLive/@item.TotalProductSaleLive</span></td>
+                            <td><span class="text-@(item.IsStreaming == true ? "danger" : item.IsStreaming == false ? "warning" : "primary") text-semibold"><i class="fa fa-level-down" aria-hidden="true"></i> @(item.IsStreaming == true ? "Đang Livestream" : item.IsStreaming == false ? "Đã kết thúc" : "Chưa Livestream")</span> </td>
+                            <td>
+                                <button id="btnViews" class="btn btn-primary btn-sm rounded-0 mt-1" type="button" data-toggle="tooltip" data-placement="top" data-original-title="@(item.IsStreaming == null ? "Xem Sản Phẩm" : item.IsStreaming == true ? "Màn hình lấy Comments" : "Xem đơn hàng")"><i class="fa fa-table"></i></button>
+                                @if (item.IsStreaming == null)
+                                {
+                                    <button id="edit" class="btn btn-success btn-sm rounded-0 mt-1" type="button" data-toggle="modal" data-target="#add-contact" data-placement="top" data-original-title="Sửa"><i class="fa fa-edit"></i></button>
+                                    <button onclick="UpdateStatus('@item.Id', 'Deleted')" class="btn btn-danger btn-sm rounded-0 mt-1" type="button" data-toggle="tooltip" data-placement="top" title="" data-original-title="Xóa"><i class="fa fa-trash"></i></button>
+                                    <button id="openPresale-@item.Id" onclick="OpenPresale(@item.Id)" class="btn btn-dark btn-sm rounded-0 mt-1" data-toggle="tooltip" type="button" data-placement="top" data-original-title="@(item.OpenPreSale == true ? "Đóng Presale" :"Mở presale")"><i id="iconOpenPresale-@item.Id" class="@(item.OpenPreSale == true ? "fa fa-unlock" :"fa fa-lock")"></i></button>
+                                }
+
+                                <button onclick="AddLiveStream(@item.Id)" class="btn btn-info btn-sm rounded-0 mt-1" type="button" data-toggle="tooltip" data-placement="top" title="" data-original-title="Thêm tương tự"><i class="fa fa-copy"></i></button>
+
+                                <a href="/Livestream/ListOrderTemp/@item.Id" class="btn btn-info btn-sm rounded-0 mt-1" data-toggle="tooltip" type="button" data-placement="top" data-original-title="Quản lý đơn hàng"><i class="fa fa-shopping-cart"></i></a>
+                                <input type="hidden" class="id" value="@item.Id" />
+                                <input type="hidden" class="linkHidden" value="@item.Link" />
+                                <input type="hidden" class="isStreaming" value="@item.IsStreaming.ToString()" />
+                            </td>
+                        </tr>
+                    }
+                }
+
+            </tbody>
+        </table>
+    </div>
+    @Html.Partial("_PartialPaging", new { CallBackName = "getListByFilter", Page = ViewBag.Page, TotalPage = ViewBag.TotalPage, TotalRow = ViewBag.TotalRow })
+}
+
+<script>
+
+    //Tao ... khi chuoi qua 20 ky tu
+    var shortenName = document.getElementsByClassName('link');
+    for (var i = 0; i < shortenName.length; i++) {
+        if (shortenName[i].innerHTML.length > 25) {
+            shortenName[i].innerHTML = shortenName[i].innerHTML.substring(0, 25) + '...';
+        }
+    }
+
+    $("#demo-foo-addrow").on('click', '#btnViews', function () {
+        var currentRow = $(this).closest(".tr-list-livestream");
+
+        var idLiveStream = currentRow.find(".id").val();
+        var isStreaming = currentRow.find(".isStreaming").val();
+        if (isStreaming == "True") {
+            window.location.href = "/Livestream/Comments/" + idLiveStream;
+        } else if (isStreaming == "False") {
+            window.location.href = "/Livestream/ChotDon/" + idLiveStream;
+        } else {
+            window.location.href = "/Livestream/Products?idLivestream=" + idLiveStream;
+        }
+    });
+
+    $("#demo-foo-addrow").on('click', '#edit', function () {
+        $("#myModalLabel").text("Cập nhật Livestream");
+        $("#Error").hide();
+
+        // get the current row
+        var currentRow = $(this).closest(".tr-list-livestream");
+
+        var id = currentRow.find(".id").val();
+        var link = currentRow.find(".link").text();
+        var description = currentRow.find(".description").text();
+        $("#Id").val(id);
+        $("#Link").val(link);
+        $("#Description").val(description);
+    });
+
+    $("#demo-foo-addrow").on('click', '.link', function () {
+        var currentRow = $(this).closest(".tr-list-livestream");
+        var link = currentRow.find(".linkHidden").val();
+        window.open(link);
+    });
+
+    function OpenPresale(id) {
+        $.ajax({
+            type: "POST",
+            url: "/Livestream/OpenPresale",
+            data: {
+                id: id
+            },
+            success: function (data) {
+                if (data.code == error.success.Code) {
+                    toastr.options.timeOut = 500;
+                    toastr.success("Thành công");
+                    if (data.data == true) {
+                        $("#openPresale-" + id).attr("data-original-title", "Đóng presale");
+                        $("#iconOpenPresale-" + id).attr("class", "fa fa-unlock");
+                    }
+                    else {
+                        $("#openPresale-" + id).attr("data-original-title", "Mở presale");
+                        $("#iconOpenPresale-" + id).attr("class", "fa fa-lock");
+                    }
+                }
+            }
+        });
+    }
+
+    function UpdateStatus(id, eLiveStreamStatus) {
+        swal({
+            title: "Bạn có chắc chắn xóa?",
+            text: "Khi xóa, bạn sẽ không thể khôi phục lại",
+            icon: "error",
+            buttons: true,
+            dangerMode: true
+        }).then((clickYes) => {
+            if (clickYes) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Livestream/UpdateStatusLiveStream/" + id,
+                    data: {
+                        eLiveStreamStatus: eLiveStreamStatus
+                    },
+                    success: function (data) {
+                        if (data.code == error.success.Code) {
+                            toastr.options.timeOut = 500;
+                            toastr.success("Xóa thành công");
+                            getListByFilter(@ViewBag.Page);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // NN
+    function AddLiveStream(id) {
+
+        swal({
+            title: "Thêm livestream",
+            text: "Bạn muốn thêm một live stream tương tự?",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true
+        }).then((clickYes) => {
+            if (clickYes) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Livestream/CoppyLiveStream",
+                    data: {
+                        id: id
+                    },
+                    success: function (data) {
+                        if (data.code == error.success.Code) {
+                            toastr.success("Đã thêm một kỳ Live Stream tương tự.");
+                            getListByFilter();
+                        }
+                        else toastr.warning(data.message);
+                    }
+                });
+            }
+        });
+    }
+
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="modal"]').tooltip()
+    })
+
+
+</script>

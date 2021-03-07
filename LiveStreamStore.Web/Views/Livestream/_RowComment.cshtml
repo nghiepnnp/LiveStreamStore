@@ -1,0 +1,30 @@
+﻿@using LiveStreamStore.Lib.Data.DBContext.Models;
+@model List<Comment>
+@for (int i = 0; i < Model.Count; i++)
+{
+    <tr class="tr-list-comment">
+        <td class="facebookname">@Model[i].FaceBookName</td>
+        <td>@Model[i].CommentContent</td>
+        <td>@Model[i].TotalPurchased </td>
+        <td>@Model[i].TotalCancellations </td>
+        <td><i class="@(Model[i].HasAddress ? Html.Raw("fas fa-map-marker-alt"): null)" style='font-size:24px'></i> <i class="@((Model[i].Phone!=string.Empty && Model[i].Phone!= null) ? Html.Raw("fas fa-phone"):null) " style="font-size:24px;color:red"></i></td>
+        <input type="hidden" class="phone" value=@Model[i].Phone />
+        @*<input type="hidden" id="address" value=@customers[i].Address/>*@
+        <input type="hidden" class="facebookId" value=@Model[i].FaceBookId />
+        <input type="hidden" class="commentFaceBookId" value=@Model[i].CommentFaceBookId />
+        <td>
+            <button class="btn btn-success btn-sm rounded-0" type="button" data-toggle="modal" data-target="#add-chotdon" id="chotDon" name="chotDon-@Model[i].CommentFaceBookId">Chốt đơn</button>
+        </td>
+    </tr>
+}
+
+<script>
+    $("#chotDon").click(function () {
+        $('#productInModal').css('background-color', 'white');
+        var required = document.querySelectorAll("input[required]");
+        required.forEach(function (element) {
+            element.style["border"] = "1px solid #ced4da";
+        });
+    })
+</script>
+

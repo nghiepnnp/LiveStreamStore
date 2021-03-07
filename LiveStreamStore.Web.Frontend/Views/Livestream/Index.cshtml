@@ -1,0 +1,51 @@
+﻿@{
+    ViewBag.Title = "Trang chủ";
+}
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body" style="background:#5bbed1">
+                <h2 style="font-family: Brush Script MT,cursive;" class="card-title"><b>@ViewBag.StoreName </b></h2>
+                <div id="table-content">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group" style="display:none">
+    <div class="col-xs-12">
+        <input class="form-control" type="text" required="" name="timezoneoffset" id="timezone">
+    </div>
+</div>
+
+<script>
+    $().ready(function () {
+        var offset = - (new Date().getTimezoneOffset() * 60);
+        $("#timezone").val(offset);
+    })
+
+    //function getListByFilter
+    function getListByFilter() {
+        var timezoneoffset = $("#timezone").val();
+        $.ajax({
+            url: "@Url.Action("GetListByStreaming", "Livestream")",
+            type: "POST",
+            dataType: "html",
+            data: {
+                timezoneoffset: timezoneoffset
+            },
+            success: (function (result) {
+                $("#table-content").html(result);
+            })
+        })
+    }
+    $(document).ready(getListByFilter);
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="modal"]').tooltip()
+    })
+
+</script>

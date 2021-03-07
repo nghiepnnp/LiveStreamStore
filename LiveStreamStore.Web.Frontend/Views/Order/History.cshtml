@@ -1,0 +1,123 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.OrderTemp>
+@{
+    ViewData["Title"] = "Đơn hàng";
+}
+
+<style>
+    #mobile {
+        display: none;
+    }
+    /* ipad mini */
+    @@media only screen and (min-device-width: 320px) and (max-device-width: 768px) and (-webkit-min-device-pixel-ratio: 1) {
+        .table-responsive {
+            display: none;
+        }
+
+        #mobile {
+            display: block;
+        }
+    }
+</style>
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title" style="font-family: 'Font Awesome 5 Free';">Đơn hàng của tôi</h2>
+
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table id="demo-foo-addrow" class="table table-hover no-wrap">
+                            <thead>
+                                <tr class="footable-header">
+                                    <th>Sản Phẩm</th>
+                                    <th>Ngày Mua</th>
+                                    <th>Số Lượng</th>
+                                    <th>Tổng Tiền</th>
+                                    @*<th>Trạng Thái Đơn Hàng</th>*@
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="mobile">
+
+                    </div>
+                }
+                else
+                {
+                    <center>
+                        <p>Bạn chưa có đơn hàng nào.</p>
+                        <a asp-controller="Livestream" asp-action="Index"><button type="button" class="btn waves-effect waves-light btn-warning">Tiếp tục mua sắm</button></a>
+                    </center>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // LazyLoading Order
+    var ajaxCallUrl, page = 0, inCallback = false, append;
+
+    if ($('#mobile').css('display') == 'none') {
+        ajaxCallUrl = '@Url.Action("PartialListOrderHistory", "Order")';
+        append = $("tbody");
+    } else {
+        ajaxCallUrl = '@Url.Action("PartialMobileListOrderHistory", "Order")';
+        append = $("#mobile");
+    }
+
+    // function getListByFilter
+    function getListByFilter() {
+        $.ajax({
+            url: ajaxCallUrl,
+            type: "POST",
+            dataType: "html",
+            success: (function (result) {
+                append.html(result);
+            })
+        })
+    }
+    // Run Page Index Auto Load Funtion getListByFilter
+    $(document).ready(getListByFilter);
+
+    $(document).on('scroll', onScroll);
+
+    function onScroll() {
+        if (Math.ceil($(window).scrollTop()) + $(window).height() == $(document).height()) {
+            if (page > -1 && !inCallback) {
+                inCallback = true;
+                page++;
+                $.ajax({
+                    type: 'POST',
+                    url: ajaxCallUrl,
+                    data: {
+                        pageNumber: page
+                    },
+                    success: function (data, textstatus) {
+                        if (data != '') {
+                            append.append(data);
+                        }
+                        else {
+                            page = -1;
+                        }
+
+                        inCallback = false;
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert(errorThrown);
+                    }
+                });
+            }
+        }
+    }
+</script>
+
+
+
+

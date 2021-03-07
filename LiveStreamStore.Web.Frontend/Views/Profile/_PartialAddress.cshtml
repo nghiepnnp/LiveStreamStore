@@ -1,0 +1,160 @@
+﻿<div class="card-body">
+    <form id="formChangeAddress" class="form-horizontal">
+
+        <div class="form-group">
+            <label class="col-md-12">Địa chỉ: </label>
+            <div class="col-md-12">
+                <input type="text" class="form-control" id="AddressName" placeholder="Nhập địa chỉ" required />
+            </div>
+        </div>
+
+        <br>
+
+        <div class="form-group">
+            <label class="col-md-12">Tỉnh: </label>
+            <div class="col-md-12">
+                <select class="select form-control" id="stateProvinceId">
+                    @foreach (var item in ViewBag.StateProvince)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="form-group">
+            <label class="col-md-12">Quận huyện: </label>
+            <div class="col-md-12">
+                <select class="select form-control" data-select2-id="1" tabindex="-1" aria-hidden="true" id="districtId">
+                </select>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="form-group">
+            <label class="col-md-12">Phường xã: </label>
+            <div class="col-md-12">
+                <select class="select form-control" data-select2-id="1" tabindex="-1" aria-hidden="true" id="wardId">
+                </select>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="alert alert-danger" id="addressError" style="display:none">
+
+        </div>
+
+        <br>
+
+        <div class="form-group">
+            <div class="col-sm-12">
+                <button type="button" id="ChangeAddress" class="btn btn-success">Cập nhật địa chỉ</button>
+                <input hidden="hidden" id="Id">
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+
+    var _Address = {};
+
+    $("#stateProvinceId").change(function () {
+        _Address.stateProvinceId = $("#stateProvinceId").val();
+        getListDistrict(_Address.stateProvinceId);
+        _Address = new Address();
+    });
+
+    $("#districtId").change(function () {
+        _Address.districtId = $("#districtId").val();
+        getListWard(_Address.districtId);
+        _Address = new Address();
+    });
+
+    function getListDistrict(stateProvinceId) {
+        $.ajax({
+            url: "@Url.Action("GetListDistrictByStateProvinceId", "LocationAddress")",
+            type: "POST",
+            dataType: "json",
+            data: {
+                stateProvinceId: stateProvinceId
+            },
+            success: (function (result) {
+                $("#districtId").html("");
+                for (i = 0; i < result.length; i++) {
+                    $("#districtId").append(`<option value="${result[i].id}">${result[i].name}</option>`);
+                }
+                // Update
+                if (_Address.districtId != 0) {
+                    $("#districtId").val(_Address.districtId);
+                    getListWard(_Address.districtId);
+                }
+                getListWard($("#districtId").val());
+            }),
+            error: function (response) {
+                console.log(response.responseText);
+            }
+        })
+    }
+
+    function getListWard(districtId) {
+        $.ajax({
+            url: "@Url.Action("GetListWardByDistrictId", "LocationAddress")",
+            type: "POST",
+            dataType: "json",
+            data: {
+                districtId: districtId
+            },
+            success: (function (result) {
+                $("#wardId").html("");
+                for (i = 0; i < result.length; i++) {
+                    $("#wardId").append(`<option value="${result[i].id}">${result[i].wardName}</option>`);
+                }
+                // Update
+                if (_Address.wardId != 0) {
+                    $("#wardId").val(_Address.wardId);
+                }
+                $("#wardId").val();
+            }),
+            error: function (response) {
+                console.log(response.responseText);
+            }
+        })
+    }
+
+    function CreateAddress() {
+        // init contructtor funtion Address
+        _Address = new Address();
+
+        $("#stateProvinceId").val(_Address.stateProvinceId);
+        getListDistrict(_Address.stateProvinceId);
+
+        // Clear Input
+        document.getElementById('formChangeAddress').reset();
+
+        // Error require input
+        var required = document.querySelectorAll("input[required]");
+        required.forEach(function (element) {
+            element.style["border"] = "1px solid #ced4da";
+        });
+        $("#addressError").hide();
+    }
+
+    function EditAddress(StateId, DistrictId, WardId) {
+        _Address.stateProvinceId = StateId;
+        _Address.districtId = DistrictId;
+        _Address.wardId = WardId;
+
+        $('#stateProvinceId').val(_Address.stateProvinceId);
+        getListDistrict(_Address.stateProvinceId);
+        $('#districtId').val(_Address.districtId);
+        $('#wardId').val(_Address.wardId);
+    }
+
+</script>
+
+<script src="~/js/Address.js"></script>

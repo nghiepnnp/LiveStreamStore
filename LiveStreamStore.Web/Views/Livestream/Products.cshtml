@@ -1,0 +1,93 @@
+﻿@using LiveStreamStore.Lib.Data.DBContext.Models;
+@{
+    ViewData["Title"] = "Sản phẩm";
+    LiveStream liveStream = ViewBag.LiveStream;
+    var TimeZone = int.Parse(ViewBag.CurrentTimeZoneOffSet);
+}
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Danh Sách Sản Phẩm Thuộc Livestream Ngày <b>@liveStream.CreatedDateUtc?.AddSeconds(TimeZone) </b></h4>
+                <input type="hidden" id="idLiveStream" value="@liveStream.Id" />
+                <div class="row">
+                    <div class="col-sm-12 col-md-4">
+                        <div class="input-group ">
+                            <input type="text" class="form-control" placeholder="Tìm kiếm theo tên, mã" name="Keyword" id="Keyword">
+                            <div class="input-group-append ">
+                                <button id="SearchKeyword" type="button" class="btn waves-effect waves-light btn-primary" data-toggle="tooltip" title="Tìm kiếm theo tên, mã">
+                                    <span class="fas fa-search"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-8">
+                        <button id="btnCreate1" type="button" class="btn float-right btn-info my-2" data-toggle="modal" data-target="#add-contact">Thêm Sản Phẩm</button>
+                    </div>
+                </div>
+                
+                <!-- Add Contact Popup Model -->
+                @Html.Partial("_PartialModalProduct")
+                <div id="table-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12 col-md-12">
+        <a href="/Livestream/Comments/@liveStream.Id">
+            <button id="batdauLivestream" class="btn float-right hidden-sm-down btn-dark">Bắt Đầu Livestream</button>
+        </a>
+    </div>
+</div>
+<script>
+
+    // function getListByFilter
+    function getListByFilter() {
+        var idLiveStream = $("#idLiveStream").val();
+        var keywork = $("#Keyword").val();
+        $.ajax({
+            url: "@Url.Action("GetListProductByLiveStream", "Livestream")",
+            type: "POST",
+            data: {
+                idLivestream: idLiveStream,
+                keywork: keywork
+            },
+            dataType: "html",
+            success: (function (result) {
+                $("#table-content").html(result);
+            })
+        })
+    }
+    // Run Page Index Auto Load Funtion getListByFilter
+    $(document).ready(getListByFilter);
+
+    //click button Thêm Sản Phẩm
+    $("#btnCreate1").click(function () {
+        $("#myModalLabel").text("Thêm Sản Phẩm");
+        $("#mName, #mBarcode, #Category").prop("disabled", false);
+        $("#mId, #mName, #mCode, #mWeight, #mBarcode, #mDescription, #mPrice, #mImage, #Category, #Product, #mIdProductInfo, #mIdCategory").val("");
+        $("#mLimit, #mQuantity").val(1);
+        $("#Error").hide();
+        $("#divChonSanPham").show();
+        $("#select-image").attr("src", "");
+        var required = document.querySelectorAll("input[required]");
+        required.forEach(function (element) {
+            element.style["border"] = "1px solid #ced4da";
+        });
+    })
+
+    $("#SearchKeyword").click(function (e) {
+        getListByFilter();
+    })
+
+    $('#Keyword').keypress(function (event) {
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13') {
+            getListByFilter();
+        }
+    });
+
+</script>
+

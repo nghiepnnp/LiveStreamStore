@@ -1,0 +1,173 @@
+﻿@model LiveStreamStore.Lib.Data.DBContext.Models.User;
+@using Microsoft.AspNetCore.Http;
+@{
+    IHttpContextAccessor _HttpContextAccessor = EngineContext.Resolve<IHttpContextAccessor>();
+    string domainName = "https://" + _HttpContextAccessor.HttpContext.Request.Host.Value;
+}
+<style>
+    a {
+        cursor: pointer
+    }
+</style>
+<div class="row">
+    <!-- Column -->
+    <div class="col-lg-4 col-xlg-3 col-md-5">
+        <div class="card">
+            <img class="card-img" src="~/Media/assets/images/background/socialbg.jpg" alt="Card image">
+            <div class="card-img-overlay card-inverse social-profile d-flex ">
+                <div class="card-body">
+                    <center class="mt-4">
+                        @{
+                            if (Model.Avatar != null)
+                            {
+                                <img src="@domainName@Model.Avatar.FileUrl" class="img-circle" width="150">
+                            }
+                            else
+                            {
+                                <img src="~/images/defaults/AvatarDefault.png" class="img-circle" width="150">
+                            }
+                        }
+                        <h4 class="card-title">@Model.Fullname</h4>
+                        <h6 class="card-subtitle">@Model.Email</h6>
+                        <input type="file" name="upload_image" id="upload_image" accept="image/*" style="display:none;">
+                        <a class="link" id="btnChangeAvatar" style="color: #17a2b8"><i class="icon-camera"></i> <font class="font-medium">Đổi ảnh</font></a>
+                    </center>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <small class="text-muted">Email address </small>
+                <h6>@Model.Email</h6>
+                <small class="text-muted p-t-30 db">Phone</small>
+                <h6>@Model.Phone</h6>
+            </div>
+        </div>
+    </div>
+    <!-- Column -->
+    <!-- Column -->
+    <div class="col-lg-8 col-xlg-9 col-md-7">
+        <div class="card">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs profile-tab" role="tablist">
+                <li class="nav-item"> <a class="nav-link active" data-toggle="tab" href="#settings" role="tab" aria-selected="true">Hồ sơ</a> </li>
+            </ul>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <!--second tab-->
+                <div class="tab-pane active" id="settings" role="tabpanel">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="col-md-12"><b>Tên</b></label>
+                            <div class="col-md-12">
+                                <input id="FullName" type="text" placeholder="" class="form-control form-control-line" value="@Model.Fullname">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-12"><b>Email</b></label>
+                            <div class="col-md-12">
+                                <input id="Email" type="email" placeholder="" class="form-control form-control-line" name="example-email" id="example-email" value="@Model.Email">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-12"><b>Số điện thoại</b></label>
+                            <div class="col-md-12">
+                                <input id="Phone" type="text" placeholder="" class="form-control form-control-line" value="@Model.Phone">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <button id="btnSave" class="btn btn-success">Cập nhật hồ sơ</button>
+                                <input type="hidden" id="Id" value="@Model.Id" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Column -->
+</div>
+@*Gọi bootstrap modal*@
+@Html.Partial("_PartialModalAvatar")
+
+<script>
+    // Click btnSave
+    $("#btnSave").click(function () {
+        var id = $("#Id").val();
+        var fullname = $("#FullName").val();
+        var email = $("#Email").val();
+        var phone = $("#Phone").val();
+        $.ajax({
+            type: "POST",
+            url: "/UserStore/UpdateProfile",
+            data: {
+                Id: id,
+                Fullname: fullname,
+                Email: email,
+                Phone: phone
+            },
+            success: function (data) {
+                if (data.code == error.success.Code) {
+                    console.log(data.code);
+                    toastr.success("Cập nhật thành công");
+                    getUserStore();
+                    getPartialLogout();
+                } else {
+                    $("#Error").html(`<strong>${'Lỗi'}!</strong> ${data.message}`).show();
+                }
+            }
+        });
+    });
+
+    //Click btnChange Avatar
+    $("#btnChangeAvatar").on('click', function (e) {
+        e.preventDefault();
+        $('#upload_image').val("");
+        $("#upload_image:hidden").trigger('click');
+    });
+
+    $("#upload_image:hidden").on('change', function (event) {
+        $("#profileModal").modal("show");
+        $("#myModalLabel").text("Bạn có chắc muốn đổi ảnh không?");
+        $('#divImage').html('<img id="output" src="#" width="100%"/>');
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#output').attr('src', e.target.result)
+        };
+        reader.readAsDataURL(event.target.files[0]);
+        $('.modal-footer').show();
+    });
+
+    // click buttonSaveAvatar
+    $('#btnSaveAvatar').click(function () {
+        var id = $("#Id").val();
+        var formData = new FormData();
+        var fileUpload = $("#upload_image").get(0).files[0];
+        var formData = new FormData();
+        if (fileUpload != null) {
+            formData.append('formFile', fileUpload);
+        }
+        formData.append('Id', id);
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("ChangeProfileAvatar", "UserStore")",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function (data) {
+                if (data.code == error.success.Code) {
+                    toastr.success('Thay đổi ảnh thành công');
+                    $(".modal-backdrop").css('position', 'static');
+                    getUserStore();
+                    getPartialLogout();
+                } else {
+                    $("#divImage").hide();
+                    $("#Error").html(`<strong>Lỗi!</strong> ${data.message}`).show();
+                }
+            }
+        });
+    });
+
+
+</script>

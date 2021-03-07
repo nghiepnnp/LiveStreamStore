@@ -1,0 +1,169 @@
+﻿@using LiveStreamStore.Lib.Data.DBContext.Models
+@using LiveStreamStore.Lib.Models.Enums;
+@{
+    ViewBag.Title = "Trang chủ";
+    User user = ViewBag.User;
+    string domain = ViewBag.DomainPresale;
+    List<Store> stores = ViewBag.Stores;
+}
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row pb-3">
+                    <h4 class="card-title col-md-3">
+                        Quản Lý Ngày Livestream
+                    </h4>
+                    @if (user.RoleId == (int)ERoleUser.Admin)
+                    {
+                        <select id="StoreId" onchange="getListByFilter()" class="form-control col-sm-12 col-md-2">
+                            <option value="-999">All Store</option>
+                            @foreach (var item in stores)
+                            {
+                                <option value="@item.Id">@item.Code : @item.Name</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        @if (user.Store?.Code == null)
+                        {
+                            <span style="color: red">(Xin vui lòng liên hệ với chúng tôi để được kích hoạt tất cả các tính năng)</span>
+                        }
+                    }
+                </div>
+                <input id="StoreCode" type="hidden" name="name" value="@user.Store?.Code" />
+                <input id="DomainPresale" type="hidden" value="@domain" />
+                <div class="row">
+
+                    <div class="col-sm-12 col-md-2">
+                        @Html.Partial("_PartialFilterTop", new { CallBackName = "getListByFilter" })
+                    </div>
+
+                    <div class="input-daterange input-group col-md-5" id="date-range">
+                        <input type="text" class="form-control" name="start" id="StartDate" value="" placeholder="MM/DD/YYYY">
+                        <div class="input-group-append">
+                            <span class="input-group-text bg-info b-0 text-white">TO</span>
+                        </div>
+                        <input type="text" class="form-control" name="end" id="EndDate" value="" placeholder="MM/DD/YYYY">
+                    </div>
+
+                    <div class="col-sm-12 col-md-2">
+                        <button id="SearchDate" type="button" class="btn waves-effect waves-light btn-rounded btn-primary" data-toggle="tooltip" title="Tìm kiếm theo ngày">
+                            Tìm kiếm
+                        </button>
+                    </div>
+
+                    <div class="col-sm-12 col-md-2">
+                        <button id="btnGetLinkPreSale" type="button" class="btn waves-effect waves-light btn-warning">Link PreSale</button>
+                    </div>
+
+                    <div class="col-sm-12 col-md-1">
+                        <button id="btnCreate" type="button" class="btn float-right hidden-sm-down btn-info" data-toggle="modal" data-target="#add-contact" title="Thêm Livestream">
+                            Thêm
+                        </button>
+
+                    </div>
+                </div>
+                <!-- Add Contact Popup Model -->
+                @Html.Partial("_PartialModalLiveStream")
+                <div id="table-content">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var page = 1
+    // function getListByFilter
+    function getListByFilter(page) {
+        var top = $("#Top").val();
+        var StartDate = $("#StartDate").val();
+        var EndDate = $("#EndDate").val() + " 11:59:59 PM";
+        var StoreId = 0;
+        if ($('#StoreId').length) {
+              StoreId = $("#StoreId").val();
+        }
+        $.ajax({
+            url: "@Url.Action("SearchLiveStreamByFilter", "Livestream")",
+            type: "POST",
+            data: {
+                StartDate: StartDate,
+                EndDate: EndDate,
+                Top: top,
+                Page: page,
+                StoreId: StoreId
+            },
+            dataType: "html",
+            success: (function (result) {
+                $("#table-content").html(result);
+            })
+        })
+    }
+    // Run Page Index Auto Load Funtion getListByFilter
+    $(document).ready(getListByFilter);
+
+    $("#SearchDate").click(function () {
+        getListByFilter();
+    });
+
+    $("#Top").change(function (e) {
+        getListByFilter();
+    });
+
+    $("#btnCreate").click(function () {
+        $("#myModalLabel").text("Thêm Livestream");
+        $("#Id, #Link, #Description").val("");
+        $("#Error").hide();
+    })
+
+    // Click btnSave Add Or Update LiveStream
+    $("#btnSave").click(function () {
+        var id = $("#Id").val();
+        var link = $("#Link").val();
+        var description = $("#Description").val();
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("CreateOrUpdateLiveStream", "Livestream")",
+            data: {
+                liveStream: {
+                    Id: id,
+                    Link: link,
+                    Description: description
+                }
+            },
+            success: function (response) {
+                if (response.code == error.success.Code) {
+                    toastr.options.timeOut = 500;
+                    if (id == 0) {
+                        toastr.success("Thêm thành công");
+                    } else {
+                        toastr.success("Cập nhật thành công");
+                    }
+                    $("#add-contact").modal("hide");
+                    // save data success goi ham load data
+                    getListByFilter(page);
+                } else {
+                    $("#Error").html(`<strong>Lỗi!</strong> ${response.message}`).show();
+                }
+            }
+        });
+    });
+
+    $("#btnGetLinkPreSale").click(function () {
+        var domain =  $("#DomainPresale").val()
+        var linkPreSale = domain + '/' + $("#StoreCode").val();
+        var dummy = $('<input>').val(linkPreSale).appendTo('body').select();
+        document.execCommand('copy');
+        $(dummy).remove();
+        toastr.info("Đã Copy link PreSale");
+        window.open(linkPreSale);
+    })
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="modal"]').tooltip()
+    })
+</script>

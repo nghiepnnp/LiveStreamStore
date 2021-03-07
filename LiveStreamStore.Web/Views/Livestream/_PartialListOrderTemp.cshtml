@@ -1,0 +1,137 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.ResultOrderTempFilter>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table id="demo-foo-addrow" class="table table-hover no-wrap">
+            <thead>
+                <tr class="footable-header text-center">
+                    <th>STT</th>
+                    <th>Khách hàng</th>
+                    <th>Mã Sản Phẩm</th>
+                    <th>Giá</th>
+                    <th>Số Lượng</th>
+                    <th>Tổng giá</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    <tr class="text-center">
+                        @if (i == 0 || (i > 0 && @Model[i].Row != @Model[i - 1].Row))
+                        {
+                            <td>@Model[i].Row</td>
+                            <td>@Model[i].CustomerName (@Model[i].CustomerPhone)</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                            <td></td>
+                        }
+                        <td>@Model[i].ProductCode</td>
+                        <td class="price">@Model[i].ProductPrice</td>
+                        <td>@Model[i].Quantity</td>
+                        <td class="totalPrice">@Model[i].TotalPrice</td>
+                        @if (Model[i].Status == 0)
+                        {
+                            <td>
+                                <button id="deleteOrderTemp-@Model[i].Id" onclick="deleteOrderTemp(@Model[i].Id)" type="button" data-toggle="tooltip" data-original-title="Hủy" class="btn btn-outline-danger"><i class="fa fa-trash"></i></button>
+                            </td>
+                        }
+                        else
+                        {
+                            if (Model[i].Status == -1)
+                            {
+                                <td>
+                                    <button id="revert-@Model[i].Id" onclick="revertOrderTemp(@Model[i].Id)" type="button" data-toggle="tooltip" data-original-title="Revert" class="btn btn-outline-success"><i class="fa fa-undo"></i></button>
+                                </td>
+                            }
+                        }
+
+
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+    @Html.Partial("_PartialPaging", new { CallBackName = "getListByFilter", Page = ViewBag.Page, TotalPage = ViewBag.TotalPage, TotalRow = ViewBag.TotalRow })
+}
+else
+{
+    <div style="display:flex; justify-content:center; margin-top:auto">
+        <card>
+            <h3>Hiện chưa có đơn hàng nào...</h3>
+        </card>
+    </div>
+}
+<script>
+     $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+     })
+    function deleteOrderTemp(id) {
+          swal({
+            title: "Bạn có chắc chắn xóa?",
+            icon: "info",
+            buttons: true,
+            dangerMode: true
+        }).then((clickYes) => {
+            if (clickYes) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Livestream/DeleteOrderTemp/",
+                    data: {
+                        id: id
+                    },
+                    success: function (data) {
+                        if (data.code == error.success.Code) {
+                            toastr.options.timeOut = 500;
+                            toastr.success("Xóa thành công");
+                            getListByFilter(@ViewBag.Page);
+                        }
+                    }
+                });
+            }
+        });
+    }
+     function revertOrderTemp(id) {
+          swal({
+            title: "Đơn hàng sẽ được chuyển qua đơn hàng chưa chốt?",
+            icon: "info",
+            buttons: true,
+            dangerMode: true
+        }).then((clickYes) => {
+            if (clickYes) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Livestream/RevertOrderTemp/",
+                    data: {
+                        id: id
+                    },
+                    success: function (data) {
+                        toastr.options.timeOut = 500;
+                        if (data.code == error.success.Code) {
+                            toastr.success("Chuyển thành công");
+                            getListByFilter(@ViewBag.Page);
+                        }
+                        else {
+                             toastr.error("Thất bại");
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        var price = document.getElementsByClassName('price');
+        var totalPrice = document.getElementsByClassName('totalPrice');
+        for (var i = 0; i < price.length; i++) {
+            price[i].innerHTML = Intl.NumberFormat().format(price[i].innerHTML) + "đ";
+            totalPrice[i].innerHTML = Intl.NumberFormat().format(totalPrice[i].innerHTML) + "đ";
+        }
+    });
+
+</script>

@@ -1,0 +1,187 @@
+﻿@model LiveStreamStore.Lib.Data.DBContext.Models.LiveStream;
+@{
+    ViewData["Title"] = "Sản phẩm";
+}
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="col-md-12">
+                    @if (Model != null && Model.OpenPreSale == true)
+                    {
+                        <h2 style="margin-top: 10px; margin-bottom: 20px; font-family: Brush Script MT,cursive;"><b>@Model.User.Store.Name</b></h2>
+                        <div id="table-content" class="row">
+
+                        </div>
+                        <input id="idLivestream" value="@Model.Id" hidden />
+                    }
+                    else
+                    {
+                        <center>
+                            <h3>Hiện tại chưa có sản phẩm nào.</h3>
+                        </center>
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 10px; margin-bottom: 10px;">
+
+    <a id="back2Top" href="#">&#10148;</a>
+
+</div>
+
+<script>
+
+    var page = 0,
+        inCallback = false;
+
+    function getListByFilter() {
+        idLiveStream = $("#idLivestream").val();
+        $.ajax({
+            url: "@Url.Action("GetProductBeforeLiveStream", "Livestream")",
+            type: "POST",
+            data: {
+                idLivestream: idLiveStream
+            },
+            dataType: "html",
+            success: (function (result) {
+                $("#table-content").html(result);
+            })
+        })
+    }
+    $(document).ready(getListByFilter);
+
+    //Nut tro ve dau trang va Lazy loading
+    $(document).scroll(function () {
+        var height = $(window).scrollTop();
+        if (height > 100) {
+            $('#back2Top').fadeIn();
+        } else {
+            $('#back2Top').fadeOut();
+        }
+
+        if (Math.ceil($(window).scrollTop()) + $(window).height() == $(document).height()) {
+            if (page > -1 && !inCallback) {
+                var id = $("#idLivestream").val();
+                inCallback = true;
+                page++;
+                $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("GetProductBeforeLiveStream", "Livestream")",
+                    data: {
+                        idLivestream: id,
+                        pageNumber: page
+                    },
+                    success: function (data, textstatus) {
+                        var words = data.split("\n");
+                        if (words[2].trim() == "<script>") {
+                            page = -1;
+                        }
+                        else {
+                            $("#table-content").append(data);
+                        }
+                        inCallback = false;
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert(errorThrown);
+                    }
+                });
+            }
+        }
+    });
+
+    //Khi nhan button +
+    $('#table-content').on('click', '.plus', function () {
+        var current = $(this).closest("#click");
+        var number = current.find('#number').val();
+        var max = current.find('#number').attr('max');
+        number = parseInt(number) + 1;
+        if (number > max) {
+            toastr.options.timeOut = 800;
+            toastr.warning("Số lượng tối đa được mua là " + max);
+            return;
+        }
+        current.find('#number').val(number);
+    });
+
+    //Khi nhan button -
+    $('#table-content').on('click', '.minus', function () {
+        var current = $(this).closest("#click");
+        var number = current.find('#number').val();
+        number = parseInt(number) - 1;
+        if (number == 0) {
+            number = 1;
+        }
+        current.find('#number').val(number);
+    });
+
+    //Kiem tra so luong nhap vao input
+    $('#table-content').on('input', '#number', function () {
+        var current = $(this).closest("#click");
+        var maxvalue = current.find('#number').attr('max');
+        var number = current.find('#number').val();
+        if (number == 0) {
+            current.find('#number').val(1);
+        }
+        else if (number > parseInt(maxvalue)) {
+            current.find('#number').val(parseInt(maxvalue));
+        }
+    });
+
+    //Click them san pham vao gio hang
+    $('#table-content').on('click', '#addProduct', function () {
+        var current = $(this).closest("#click");
+
+        var max = current.find('#number').attr('max');
+        if (max == 0) {
+            toastr.options.timeOut = 800;
+            toastr.warning("Số lượng còn lại không đủ, đã bán hết hoặc bạn đã mua đủ số lượng.");
+            return;
+        }
+
+        var id = current.find('.id').val();
+        var quantity = current.find('#number').val();
+        var limited = current.find('#number').attr('max');
+        var livestream = $('#idLivestream').val();
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("SetCart", "Cart")",
+            data: {
+                ProductId: id,
+                Quantity: quantity,
+                Limited: limited,
+                LivestreamId: livestream
+            },
+            success: function (response) {
+                if (response.code == error.success.Code) {
+                    toastr.options.timeOut = 200;
+                    toastr.success("Thành công");
+                    getCookie();
+                }
+                else if (response.code == error.limited.Code) {
+                    toastr.options.timeOut = 800;
+                    toastr.warning(error.limited.Message);
+                }
+                else if (response.code == error.check_product.Code) {
+                    toastr.options.timeOut = 800;
+                    toastr.warning(error.check_product.Message);
+                }
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        //Chay len dau trang
+        $("#back2Top").click(function (event) {
+            event.preventDefault();
+            $("html, body").animate({ scrollTop: 0 }, "slow");
+            return false;
+        });
+    });
+
+</script>

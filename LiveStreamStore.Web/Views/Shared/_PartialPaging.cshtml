@@ -1,0 +1,63 @@
+﻿@{
+    int totalRow = Model.TotalRow;
+    int totalPage = Model.TotalPage;
+    int page = Model.Page;
+    var callbackName = Model.CallBackName;
+}
+
+<style>
+    .page-link {
+        cursor: pointer
+    }
+
+    .noHover {
+        pointer-events: none;
+    }
+</style>
+
+<div class="row">
+    <div class="col-sm-12 col-md-6">
+        <div class="dataTables_info" id="myTable_info" role="status" aria-live="polite">
+            Hiển thị trang @(page) đến trang @(totalPage) trong tổng @(totalRow) đơn
+        </div>
+    </div>
+    <div class="col-sm-12 col-md-6">
+        <div class="dataTables_paginate paging_simple_numbers float-right" id="myTable_paginate">
+            <ul class="pagination">
+                <li class="paginate_button page-item @(page == 1 ? "previous disabled noHover" : "" )" id="config-table_previous">
+                    <a aria-controls="config-table" data-dt-idx="@(1)" tabindex="0" class="page-link"> &lt;&lt; </a>
+                </li>
+                <li class="paginate_button page-item @(page == 1 ? "previous disabled noHover" : "" )" id="config-table_previous">
+                    <a aria-controls="config-table" data-dt-idx="@(page-1)" tabindex="0" class="page-link"> Previous </a>
+                </li>
+                @{ int dem = 1;
+                    for (int i = page - 3; i <= totalPage; i++)
+                    {
+                        if (i > 0 && dem <= 6)
+                        {
+                            <li class="paginate_button page-item @(page == i ? " active" : "" )">
+                                <a aria-controls="config-table" data-dt-idx="@i" tabindex="0" class="page-link"> @(i) </a>
+                            </li>
+                            dem++;
+                        }
+                    }
+                }
+                <li class="paginate_button page-item next @(page == totalPage ? "disabled noHover" : "" )" id="config-table_next">
+                    <a aria-controls="config-table" data-dt-idx="@(page+1)" tabindex="0" class="page-link"> Next </a>
+                </li>
+                <li class="paginate_button page-item next @(page == totalPage ? "disabled noHover" : "" )" id="config-table_next">
+                    <a aria-controls="config-table" data-dt-idx="@(totalPage)" tabindex="0" class="page-link"> >> </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(".page-link").on("click", function () {
+        page = $(this).attr("data-dt-idx");
+        window["@callbackName"](page);
+    });
+
+</script>

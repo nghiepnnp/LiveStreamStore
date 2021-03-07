@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <CopyRazorGenerateFilesToPublishDirectory>true</CopyRazorGenerateFilesToPublishDirectory>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>  
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Themes\monster-admin\assets\plugins\jquery-asColorPicker-master\.github\ISSUE_TEMPLATE.md" />
+    <None Include="Themes\monster-admin\assets\plugins\jquery-asColorPicker-master\.github\PULL_REQUEST_TEMPLATE.md" />
+    <None Include="Themes\monster-admin\assets\plugins\jquery-wizard-master\.github\ISSUE_TEMPLATE.md" />
+    <None Include="Themes\monster-admin\assets\plugins\jquery-wizard-master\.github\PULL_REQUEST_TEMPLATE.md" />
+    <None Include="wwwroot\Media\assets\plugins\jquery-asColorPicker-master\.github\ISSUE_TEMPLATE.md" />
+    <None Include="wwwroot\Media\assets\plugins\jquery-asColorPicker-master\.github\PULL_REQUEST_TEMPLATE.md" />
+    <None Include="wwwroot\Media\assets\plugins\jquery-wizard-master\.github\ISSUE_TEMPLATE.md" />
+    <None Include="wwwroot\Media\assets\plugins\jquery-wizard-master\.github\PULL_REQUEST_TEMPLATE.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.95.3" />
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="3.1.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.0-preview1.19506.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.0-preview1.19506.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="3.1.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
+  </ItemGroup>
+
+</Project>

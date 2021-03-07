@@ -1,0 +1,22 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.OrderTemp>
+
+@foreach (var item in Model)
+{
+    var localTimeCreateDate = new DateTimeOffset((DateTime)item.CreatedDateUtc, TimeSpan.FromHours(0)).ToLocalTime().DateTime;
+    <div>
+        <span style="font-weight: bold; font-size: larger">@item.OrderDetail.Product.ProductInfo.Name</span>
+        <br>Ngày đặt hàng: @localTimeCreateDate.Day/@localTimeCreateDate.Month/@localTimeCreateDate.Year
+        <br>Số lượng: @item.OrderDetail.Quantity
+        <br>Tổng tiền: <span class="totalPrice">@item.OrderDetail.TotalPrice</span>
+    </div>
+    <hr />
+}
+
+<script>
+    var totalPrice = document.getElementsByClassName('totalPrice');
+    for (var i = 0; i < totalPrice.length; i++) {
+        if (totalPrice[i].innerHTML.indexOf('đ') === -1) {
+            totalPrice[i].innerHTML = Intl.NumberFormat().format(totalPrice[i].innerHTML) + " đ";
+        }
+    }
+</script>

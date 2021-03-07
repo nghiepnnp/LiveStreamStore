@@ -1,0 +1,49 @@
+﻿@model LiveStreamStore.Lib.Data.DBContext.Models.User
+
+@if (Model != null)
+{
+    <ul class="navbar-nav my-lg-0">
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @{
+                    if (Model.Avatar != null)
+                    {
+                        <img src="@Model.Avatar.FileUrl" alt="user" class="profile-pic">
+                    }
+                    else
+                    {
+                        <img src="~/images/defaults/AvatarDefault.png" alt="user" class="profile-pic">
+                    }
+                }
+            </a>
+            <div class="dropdown-menu dropdown-menu-right animated flipInY">
+                <ul class="dropdown-user">
+                    <li>
+                        <div class="dw-user-box">
+                            <div class="u-img">
+                                @{
+                                    if (Model.Avatar != null)
+                                    {
+                                        <img src="@Model.Avatar.FileUrl" alt="user">
+                                    }
+                                    else
+                                    {
+                                        <img src="~/images/defaults/AvatarDefault.png" alt="user">
+                                    }
+                                }
+                            </div>
+                            <div class="u-text">
+                                <h4>@Model.Fullname</h4>
+                                @*<p class="text-muted">@Model.Email</p>*@
+                                <a href="/UserStore/Profile" class="btn btn-rounded btn-danger btn-sm">View Profile</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li role="separator" class="divider"></li>
+                    <li><a href="/UserStore/Profile"><i class="ti-user"></i> My Profile</a></li>
+                    <li><a href="/UserStore/Logout"><i class="fa fa-power-off"></i> Logout</a></li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+}

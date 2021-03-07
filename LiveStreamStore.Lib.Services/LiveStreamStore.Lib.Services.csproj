@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UsExpress.LiveStreamStore.Lib.Data\UsExpress.LiveStreamStore.Lib.Data.csproj" />
+    <ProjectReference Include="..\UsExpress.LiveStreamStore.Lib.Models\UsExpress.LiveStreamStore.Lib.Models.csproj" />
+    <ProjectReference Include="..\UsExpress.LiveStreamStore.Lib.Utilities\UsExpress.LiveStreamStore.Lib.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>

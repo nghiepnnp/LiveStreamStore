@@ -1,0 +1,34 @@
+﻿<div id="add-contact" class="modal fade in" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel"></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="formLiveStream" class="form-horizontal">
+                    <div class="alert alert-danger" id="Error" style="display:none">
+
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-12">Link</label>
+                        <div class="col-md-12">
+                            <input type="text" class="form-control" id="Link" placeholder="Nhập link" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-12">Mô tả</label>
+                        <div class="col-md-12">
+                            <textarea type="text" class="form-control" id="Description" placeholder="Nhập mô tả"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info waves-effect" id="btnSave">Lưu</button>
+                <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Hủy</button>
+                <input hidden="hidden" type="text" class="form-control" id="Id" placeholder="Id">
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,102 @@
+﻿@using LiveStreamStore.Lib.Data.DBContext.Models;
+@{
+    ViewData["Title"] = "Đơn hàng";
+    LiveStream liveStream = ViewBag.LiveStream;
+    var TimeZone = int.Parse(ViewBag.CurrentTimeZoneOffSet);
+    DateTime timeNow = DateTime.UtcNow;
+    var localTimeNow = timeNow.AddSeconds(TimeZone);
+}
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Danh Sách Đơn Hàng Thuộc Livestream Ngày <b>@liveStream.CreatedDateUtc?.AddSeconds(TimeZone)</b></h4>
+                <input type="hidden" id="IdLiveStream" value="@liveStream.Id" />
+                <div class="row">
+                    <div class="col-sm-12 col-md-2">
+                        @Html.Partial("_PartialFilterTop", new { CallBackName = "getListByFilter" })
+                    </div>
+                    <div class="col-sm-12 col-md-3">
+                        <select class="select form-control" data-select2-id="1" tabindex="-1" aria-hidden="true" id="Status">
+                            <option value="0">Đơn hàng chưa chốt</option>
+                            <option value="1">Đơn hàng đã chốt</option>
+                            <option value="-1">Đơn hàng đã hủy </option>
+
+                        </select>
+                    </div>
+                    <div class="input-daterange input-group col-md-5" id="date-range">
+                        <input type="text" class="form-control" name="start" id="StartDate" value="@liveStream.CreatedDateUtc?.AddSeconds(TimeZone).ToString("MM/dd/yyyy")" placeholder="MM/DD/YYYY">
+                        <div class="input-group-append">
+                            <span class="input-group-text bg-info b-0 text-white">TO</span>
+                        </div>
+                        <input type="text" class="form-control"  name="end" id="EndDate" value="@localTimeNow.ToString("MM/dd/yyyy")" placeholder="MM/DD/YYYY">
+                    </div>
+
+                    <div class="col-sm-12 col-md-2">
+                        <button id="SearchDate" type="button" class="btn waves-effect waves-light btn-rounded btn-primary" data-toggle="tooltip" title="Tìm kiếm theo ngày">
+                            Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+                <div id="table-content">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12 col-md-12">
+            <button id="exportExcel" class="btn float-right hidden-sm-down btn-danger">Xuất Excel</button>
+    </div>
+</div>
+
+<script>
+    $("#Status").change(function (e) {
+        getListByFilter();
+    });
+    $("#SearchDate").click(function () {
+        getListByFilter();
+    });
+    var page = 1;
+    function getListByFilter(page) {
+        var idLiveStream = $("#IdLiveStream").val();
+        var top = $("#Top").val();
+        var status = $("#Status").val();
+        var StartDate = $("#StartDate").val();
+        var EndDate = $("#EndDate").val() + " 11:59:59 PM";
+        $.ajax({
+            url: "@Url.Action("GetListOrderTempByLiveStream", "Livestream")",
+            type: "POST",
+            data: {
+                IdLiveStream: idLiveStream,
+                Status: status,
+                Top: top,
+                Page: page,
+                StartDate: StartDate,
+                EndDate: EndDate
+            },
+            dataType: "html",
+            success: (function (result) {
+                $("#table-content").html(result);
+            })
+        })
+    }
+    // Run Page Index Auto Load Funtion getListByFilter
+    $(document).ready(getListByFilter);
+
+    $("#IdAddress, #Top").change(function (e) {
+        getListByFilter();
+    });
+    $("#exportExcel").click(function () {
+        debugger
+        var idLiveStream = $("#IdLiveStream").val();
+        var status = $("#Status").val();
+        var StartDate = $("#StartDate").val();
+        var EndDate = $("#EndDate").val() + " 11:59:59 PM";
+        location.href = "/Livestream/ExportExcelOrderTemp?IdLiveStream="
+            + idLiveStream + "&StartDate=" + StartDate + "&EndDate=" + EndDate  + "&Status=" + status;
+    });
+   
+</script>

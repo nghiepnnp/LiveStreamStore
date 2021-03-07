@@ -1,0 +1,97 @@
+﻿@using Microsoft.AspNetCore.Http;
+@using System.Linq;
+@model List<LiveStreamStore.Lib.Data.DBContext.Models.Product>
+@{
+    IHttpContextAccessor _HttpContextAccessor = EngineContext.Resolve<IHttpContextAccessor>();
+    string domainName = _HttpContextAccessor.HttpContext.Request.Host.Value;
+    List<LiveStreamStore.Lib.Data.DBContext.Models.ShoppingCart> shoppingCart = ViewBag.ListCart;
+}
+
+@foreach (var item in Model)
+{
+    <div class="col-lg-4 col-md-6" id="quantityPro">
+        <div class="card" id="table">
+            <center style="margin-top: 10px;"><img id="setImgSize" src="@((item.ProductInfo.Image != null) ? item.ProductInfo.Image.Domain + item.ProductInfo.Image.FileUrl : "/images/Defaults/ProductDefault.png")" alt="" /></center>
+            <div class="card-body" id="click">
+                <h3 id="name">@item.ProductInfo.Name (@item.Code)</h3>
+                <span>Giá tiền: <span class="price">@item.Price</span>&nbsp;VND</span>
+                <div id="divQuantity">
+                    <span>Số lượng: <span clasa="quantity">@(item.Quantity - (item.NumberProductSold ?? 0))</span></span>
+                </div>
+                <div id="divLimited">
+                    <span>
+                        Số lượng được mua của bạn: <span clasa="limited">
+                            @if (ViewBag.Customer == null || !shoppingCart.Any(x => x.ProductId == item.Id))
+                            {
+                                @((item.Quantity - (item.NumberProductSold ?? 0) > item.Limited) ? item.Limited : (item.Quantity - (item.NumberProductSold ?? 0)))
+                            }
+                            else
+                            {
+                                var soluongconlaiduocmua = item.Limited - (shoppingCart.FirstOrDefault(x => x.ProductId == item.Id)?.QuantitySold ?? 0);
+                                @((item.Quantity - (item.NumberProductSold ?? 0) > soluongconlaiduocmua)
+                                    ? soluongconlaiduocmua : (item.Quantity - (item.NumberProductSold ?? 0)))
+                            }
+                        </span>
+                    </span>
+                </div>
+                <div>
+                    <span>Mô tả: <span class="description" data-toggle="tooltip" title="@item.ProductInfo.Description">@item.ProductInfo.Description</span></span>
+                </div>
+                <br />
+                <center>
+                    <div id="buttons_added">
+                        <input class="minus is-form" type="button" value="-">
+                        @if (ViewBag.Customer == null || !shoppingCart.Any(x => x.ProductId == item.Id))
+                        {
+                            <input id="number" aria-label="quantity" class="input-qty" min="1" max="@((item.Quantity - (item.NumberProductSold ?? 0) > item.Limited)
+                                ? item.Limited : (item.Quantity - (item.NumberProductSold ?? 0)))" name="" type="number" value="1">
+                        }
+                        else
+                        {
+                            var soluongconlaiduocmua = item.Limited - (shoppingCart.FirstOrDefault(x => x.ProductId == item.Id)?.QuantitySold ?? 0);
+                            <input id="number" aria-label="quantity" class="input-qty" min="1" max="@((item.Quantity - (item.NumberProductSold ?? 0) > soluongconlaiduocmua)
+                                ? soluongconlaiduocmua : (item.Quantity - (item.NumberProductSold ?? 0)))" name="" type="number" value="1">
+                                
+                        }
+                        <input class="plus is-form" type="button" value="+">
+                        &nbsp;&nbsp;
+                        <button id="addProduct" type="button" class="btn btn-primary">Thêm vào giỏ hàng</button>
+                    </div>
+                </center>
+                <input class="id" value="@item.Id" hidden />
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+
+    //Tao ... khi chuoi qua 20 ky tu
+    var shortenName = document.getElementsByClassName('description');
+    for (var i = 0; i < shortenName.length; i++) {
+        if (shortenName[i].innerHTML.length > 20 && shortenName[i].innerHTML.indexOf('...') === -1) {
+            if ($(window).width() < 545) {
+                shortenName[i].innerHTML = shortenName[i].innerHTML.substring(0, 20) + '...';
+            }
+            else if ($(window).width() > 1400) {
+                shortenName[i].innerHTML = shortenName[i].innerHTML.substring(0, 30) + '...';
+            }
+            else/* if ($(window).width() > 700)*/ {
+                shortenName[i].innerHTML = shortenName[i].innerHTML.substring(0, 20) + '...';
+            }
+        }
+    }
+
+    //Tao dau , tren so tien
+    var priceName = document.getElementsByClassName('price');
+    for (var i = 0; i < priceName.length; i++) {
+        if (priceName[i].innerHTML.indexOf(',') === -1) {
+            priceName[i].innerHTML = Intl.NumberFormat().format(priceName[i].innerHTML);
+        }
+    }
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+
+</script>

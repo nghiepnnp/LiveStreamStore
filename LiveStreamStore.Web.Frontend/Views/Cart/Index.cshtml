@@ -1,0 +1,311 @@
+﻿@model LiveStreamStore.Lib.Data.DBContext.Models.Customer
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    var listCart = ViewBag.CookieCart;
+    var address = ViewBag.Address;
+}
+
+<div>
+    <h3 class="shoppingCard" style="font-family: 'Font Awesome 5 Free';">
+        GIỎ HÀNG (<span id="quantityProduct"></span> sản phẩm)
+    </h3>
+</div>
+
+@if (listCart == null || listCart.Count == 0)
+{
+    <div class="card">
+        <div class="card-body">
+            <center>
+                <img src="~/images/defaults/mascot@2x.png" alt="" height="160px" width="190px">
+                <p>Không có sản phẩm nào trong giỏ hàng của bạn.</p>
+                <a asp-controller="Livestream" asp-action="Index"><button type="button" class="btn waves-effect waves-light btn-warning">Tiếp tục mua sắm</button></a>
+            </center>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row" id="divCart">
+
+        <div class="col-md-8" id="cartProduct">
+            <div id="content">
+
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card" id="styleCart">
+                <div class="card-body">
+                    @if (Model != null)
+                    {
+                        <div class="card-header">
+                            <h4>Thông tin và địa chỉ nhận hàng</h4>
+                            <div>
+                                <i class="fa fa-phone" aria-hidden="true"></i>&nbsp;<span id="phone">@Model.Phone</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-envelope"></i>&nbsp;<span id="email">@Model.Email</span>
+                            </div>
+                            <div class="address">
+                                @if (address == null)
+                                {
+                                    <i class="fas fa-map-marker-alt">
+                                        &nbsp;<span class="addressName"></span>
+                                        <span>
+                                            <a id="addAddress" data-toggle="modal" data-target="#add-address" style="color: #5581d4; cursor: pointer;">Thêm địa chỉ</a>
+                                        </span>
+                                    </i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-map-marker-alt">&nbsp; *, @address.WardName , @address.DistrictName , @address.StateProvinceName</i>
+                                    @*<div>
+                                        <a id="editAddress" data-toggle="modal" data-target="#add-address" style="color: #5581d4; cursor: pointer;">Sửa địa chỉ</a>
+                                    </div>*@
+                                    <div class="addressName" hidden>@address.Address1</div>
+                                    <input class="AddressId" value="@address.Id" hidden />
+                                    <input class="WardId" value="@address.WardId" hidden />
+                                    <input class="DistrictId" value="@address.DistrictId" hidden />
+                                    <input class="StateProvinceId" value="@address.StateProvinceId" hidden />
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div id="calendar-events" class="mt-3">
+                                <div class="tamTinh">Tạm tính: <span class="totalPrice" style="float: right;">0</span></div>
+                                <hr class="solid">
+                                <div>
+                                    <h4 class="thanhTien">Thành tiền: <span class="totalOrder" style="float: right; color: red;">0</span></h4>
+                                </div>
+                            </div>
+                            <br />
+                            <a id="clickOrder" style="color: white;" class="btn btn-danger btn-block waves-effect waves-light">
+                                <i class="ti-plus"></i> Đặt hàng
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @Html.Partial("_PartialModalAddress")
+
+}
+@*<script src="~/js/AjaxLoading.js"></script>*@
+
+<script>
+
+    //Khi click tao dia chi
+    $('#addAddress').click(function () {
+        $("#myModalLabel").text("Thêm địa chỉ");
+        $("#Id").val(0);
+        CreateAddress();
+    });
+
+    //Khi click chinh sua dia chi
+    $('#editAddress').click(function () {
+        $("#myModalLabel").text("Chỉnh sửa địa chỉ");
+
+        var addressId = $('.AddressId').val();
+        var name = $('.addressName').text();
+        $("#Id").val(addressId);
+        $('#addressName').val(name);
+
+        var state = $('.StateProvinceId').val();
+        var district = $('.DistrictId').val();
+        var ward = $('.WardId').val();
+        EditAddress(state, district, ward)
+    });
+
+    function getListCart() {
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("GetListCart", "Cart")",
+            dataType: "html",
+            success: function (result) {
+                $("#content").html(result);
+            }
+        });
+    }
+    $(document).ready(getListCart());
+
+    //Xoa san pham
+    $('#divCart').on('click', '#delete', function () {
+        var current = $(this).closest("#clickCart");
+        var id = current.find('.id').text();
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("Delete", "Cart")",
+            data: {
+                Id: id
+            },
+            success: function (response) {
+                if (response.code == error.success.Code) {
+                    getListCart();
+                    getCookie();
+                    if ($('div[id="clickCart"]').length == 1) {
+                        window.location.reload();
+                    }
+                }
+                else {
+                    toastr.success("Thất bại");
+                }
+            }
+        });
+    });
+
+    //Tao hoac sua dia chi
+    $('#btnAddress').click(function () {
+        var required = $("#formAddress").find($("input[required]"));
+        var checkRequired = required.length;
+        required.each(function () {
+            if ($(this).val() == "") {
+                $(this).css('border-color', 'red');
+                $("#AddressError").html(`<label>Vui lòng không được để trống trường báo đỏ.</label>`).show();
+            } else {
+                $(this).css('border-color', 'LightGray');
+                checkRequired = checkRequired - 1;
+            }
+        });
+
+        if (checkRequired == 0) {
+            var id = $("#Id").val();
+            var idCus = $('.idCus').val();
+            var address = $('#addressName').val();
+            var state = $("#StateProvinceId").val();
+            var stateName = $('#StateProvinceId :selected').text();
+            var district = $("#DistrictId").val();
+            var districtName = $('#DistrictId :selected').text();
+            var ward = $("#WardId").val();
+            var wardName = $('#WardId :selected').text();
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("CreateOrUpdate", "Address")",
+                data: {
+                    address: {
+                        Id: id,
+                        CustomerId: idCus,
+                        StateProvinceId: state,
+                        DistrictId: district,
+                        WardId: ward,
+                        StateProvinceName: stateName,
+                        DistrictName: districtName,
+                        WardName: wardName,
+                        Address1: address
+                    }
+                },
+                success: function (data) {
+                    if (data.code == error.success.Code) {
+                        if (id == 0) {
+                            toastr.success("Tạo địa chỉ thành công");
+                        } else {
+                            toastr.success("Chỉnh sửa địa chỉ thành công");
+                        }
+                        $("#add-address").modal("hide");
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                }
+            });
+        }
+    });
+
+    //Button dat hang
+    $('#clickOrder').click(function () {
+
+        document.getElementById('loginform').reset();
+        $('#LoginError').hide();
+        var idCustomer = $('.idCus').val();
+        var nameAddress = $('.addressName').text();
+        if (idCustomer == 0) {
+            $('#modalLogin').modal('show');
+        }
+        else if (nameAddress == "") {
+            $('#addAddress').click();
+        }
+        else {
+            var listDetails = [], listTemp = [];
+            var Details, Temp;
+
+            let arr = $('div[id="clickCart"]');
+            for (var i = 0; i < arr.length; i++) {
+                var current = $(arr[i]);
+
+                //Them vao list order details
+                var idProduct = current.find('.id').text();
+                var quantity = current.find('#number').val();
+                Details = { ProductId: idProduct, Quantity: quantity }
+                listDetails.push(Details);
+
+                //Them vao list order temp
+                var livestreamId = current.find('.idLivestream').val();
+                Temp = { CustomerId: idCustomer, LiveStreamId: livestreamId, IsPreSale: "True" }
+                listTemp.push(Temp);
+            }
+            $.ajax({
+               beforeSend: function () {
+                    $(".preloader").css("background", "#fff6");
+                    $('.preloader').show();
+               },
+                complete: function () {
+                    $('.preloader').hide();
+                    $(".preloader").css("background", "##fff");
+                },
+                type: "POST",
+                url: "@Url.Action("CreateOrder", "Order")",
+                data: {
+                    createOrderItem: listDetails,
+                    createOrderTemp: listTemp
+                },
+                success: function (data) {
+                    var nameCode = Object.values(data)[1];
+                    var checkCode = Object.values(data)[0];
+                    if (checkCode.code == error.check_product.Code) {
+                        toastr.warning("Món hàng " + nameCode + " không đủ số lượng");
+                    } else if (checkCode.code == error.limited.Code) {
+                        toastr.warning("Món hàng " + nameCode + " vượt quá số lượng được mua");
+                    }
+                    else if (data.code == error.success.Code) {
+                        var pathname = window.location.pathname;
+                        $('#clickOrder').hide();
+                        setTimeout(function () {
+                            window.location.href = pathname.slice(0, 4) + "/Livestream/Index";
+                        }, 3000);
+                        swal({
+                            title: "Đơn hàng của bạn đã được thêm",
+                            text: "Vui lòng đợi liên hệ từ shop",
+                            icon: "success",
+                            showCancelButton: false,
+                            dangerMode: true
+                        }).then((will) => {
+                            if (will) {
+                                window.location.href = pathname.slice(0, 4) + "/Livestream/Index";
+                            }
+                        })
+                    }
+                }
+            })
+        }
+    });
+
+    $(document).ready(function () {
+        var required = document.querySelectorAll("input[required]");
+        required.forEach(function (element) {
+            $("input[type='text']").change(function () {
+                if (element.value.trim() == "") {
+                    element.style["border"] = "1px solid red";
+                } else {
+                    element.style["border"] = "1px solid LightGray";
+                }
+            });
+        });
+    })
+
+</script>

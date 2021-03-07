@@ -1,0 +1,49 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.LiveStream>
+@{
+    var TimeZone = int.Parse(ViewBag.CurrentTimeZoneOffSet);
+}
+@if (Model.Any())
+{
+    <div id="tableLivestream" class="card" style="background:#5bbed1">
+        @foreach (var items in Model)
+        {
+            <a asp-controller="Livestream" asp-action="Products" asp-route-id="@items.Id">
+                <div class="card-body" style="box-shadow: 3px 3px #075656;border: 0px solid #ddd;border-radius: 10px;background: linear-gradient(45deg, #00000087, transparent);margin-bottom: 15px;">
+                    <div class="row text-white">
+                        <div class="col-md-12 col-lg-3">
+                            <h3 id="namePro" class="mb-0 text-white">Người livstream: @items.User.Fullname</h3>
+                        </div>
+                        <div class="col-md-12 col-lg-4">
+                            <div>Ngày livestream: @items.CreatedDateUtc?.AddSeconds(TimeZone)</div>
+                        </div>
+                        <div class="col-md-12 col-lg-4">
+                            <div>Mô tả: @items.Description</div>
+                        </div>
+                        <div class="col-md-12 col-lg-1" id="buttonProduct">
+
+                            <button id="products" class="btn waves-effect waves-light btn-warning col-md-12" data-toggle="tooltip" data-original-title="Đặt hàng"><i class="fa fa-shopping-cart"></i></button>
+
+                            <input type="hidden" class="id" value="@items.Id" />
+                            <input type="hidden" class="isStreaming" value="@items.IsStreaming.ToString()" />
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <center>
+        <h2>Hiện tại không có livestream nào được mở bán.</h2>
+    </center>
+}
+
+<script>
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="modal"]').tooltip()
+    })
+
+</script>

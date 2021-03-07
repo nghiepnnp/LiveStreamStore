@@ -1,0 +1,162 @@
+﻿@using Microsoft.AspNetCore.Http;
+@model LiveStreamStore.Lib.Data.DBContext.Models.Customer
+@{
+    IHttpContextAccessor _HttpContextAccessor = EngineContext.Resolve<IHttpContextAccessor>();
+    string domainName = _HttpContextAccessor.HttpContext.Request.Host.Value;
+}
+
+<ul class="navbar-nav my-lg-0">
+    <li>
+        <div style="border: 1px solid #ddd; margin: 20px; border-radius: 10px;" data-toggle="tooltip" title="Giỏ hàng">
+            <a asp-controller="Cart" asp-action="Index">
+                <div style="margin: 4px">
+                    <i class="fa fa-shopping-cart fa-lg" style="color: white"></i>
+                    <span id="quantityOrder" class="badge badge-warning ml-auto"> </span>
+                </div>
+            </a>
+        </div>
+    </li>
+
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" style="padding-top: 1rem;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            @if (Model != null && Model.Avatar != null)
+            {
+                <img src="@Model.Avatar.FileUrl" alt="user" class="profile-pic">
+            }
+            else
+            {
+                <img src="~/images/Defaults/AvatarDefault.png" alt="user" class="profile-pic">
+            }
+        </a>
+        <div class="dropdown-menu dropdown-menu-right animated flipInY">
+            <ul class="dropdown-user">
+                @if (Model != null)
+                {
+                    <li>
+                        <div class="dw-user-box">
+                            <div class="u-text">
+                                <h4 style="color: orangered">@Model.Fullname</h4>
+                            </div>
+                        </div>
+                    </li>
+                    <li role="separator" class="divider"></li>
+                    <li><a asp-controller="Profile" asp-action="Index"><i class="ti-user"></i> Tài khoản của tôi</a></li>
+                    <li><a asp-controller="Order" asp-action="History"><i class="fa fa-list-alt"></i> Đơn hàng của tôi</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a asp-controller="Customer" asp-action="Logout"><i class="fa fa-power-off"></i> Đăng xuất</a></li>
+                }
+                else
+                {
+                    <li><a id="Signin" style="cursor: pointer;" data-toggle="modal" data-target="#modalLogin"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a></li>
+                    @*<li role="separator" class="divider"></li>
+            <li><a id="Signup" style="cursor: pointer;" data-toggle="modal" data-target="#modalRegister"><i class="fa fa-user-plus"></i> Đăng ký</a></li>*@
+                }
+            </ul>
+        </div>
+    </li>
+
+    <input class="idCus" value="@(@Model != null ? @Model.Id : 0)" hidden />
+
+</ul>
+
+<script>
+
+    getCookie();
+
+    //Lay cookie va gan vao gio hang
+    function getCookie() {
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "@Url.Action("GetCart", "Cart")",
+            success: function (response) {
+                $('#quantityOrder, #quantityProduct').html(response);
+            }
+        });
+    }
+
+    //Khi click vao dang nhap
+    $('#Signin').click(function () {
+        $('#PhoneLogin, #LoginError').val("");
+        var required = document.querySelectorAll("input[required]");
+        required.forEach(function (element) {
+            element.style["border"] = "1px solid LightGray";
+        });
+    });
+    
+    $('#btnLogin').click(function () {
+        var required = $("#loginform").find($("input[required]"));
+        var checkRequired = required.length;
+        required.each(function () {
+            if ($(this).val() == "") {
+                $(this).css('border-color', 'red');
+                $("#LoginError").html(`<label>Vui lòng không được để trống trường báo đỏ.</label>`).show();
+            } else {
+                $(this).css('border-color', 'LightGray');
+                checkRequired = checkRequired - 1;
+            }
+        });
+        if (checkRequired == 0) {
+            var phone = $('#PhoneLogin').val();
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("Login", "Customer")",
+                dataType:"json",
+                data: {
+                    Phone: phone
+                },
+                success: function (result) {
+                    if (result.code == error.success.Code) {
+                        $("#LoginError").hide();
+                        window.location.reload();
+                    }
+                    else {
+                        if (result.data == ("Khách hàng không tồn tại")) {
+                            $("#LoginError").html(`<label>${result.data}. Vui lòng cập nhập thông tin ở <a target="_blank" rel="noopener noreferrer" href="https://usxpressglobal.com/shop-mo-dao-thong-tin-nguoi-nhan">https://usxpressglobal.com/shop-mo-dao-thong-tin-nguoi-nhan</a></label>`).show();
+                        }
+                        else {
+                            $("#LoginError").html(`<label>${result.message}</label>`).show();
+                        }
+                    }
+                }
+            })
+        }
+    });
+
+    //Kiem tra phone
+    function validatePhone(Phone) {
+        var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+        if (filter.test(Phone)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    $(document).ready(function () {
+        var required = document.querySelectorAll("input[required]");
+        required.forEach(function (element) {
+            $("input[type='text']").change(function () {
+                if (element.value.trim() == "") {
+                    element.style["border"] = "1px solid red";
+                } else {
+                    element.style["border"] = "1px solid LightGray";
+                }
+            });
+            $("input[type='password']").change(function () {
+                if (element.value.trim() == "") {
+                    element.style["border"] = "1px solid red";
+                } else {
+                    element.style["border"] = "1px solid LightGray";
+                }
+            });
+        });
+    })
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="modal"]').tooltip()
+    })
+
+</script>

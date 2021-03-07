@@ -1,0 +1,18 @@
+﻿@{
+    var callbackName = Model.CallBackName;
+}
+
+<div class="dataTables_length" id="example_length">
+    <select name="example_length" aria-controls="example" class="form-control form-control-sm" id="Top" style="min-height: 38px">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+    </select>
+</div>
+
+<script>
+    $("#Top").change(function (e) {
+        window["@callbackName"]();
+    });
+</script>

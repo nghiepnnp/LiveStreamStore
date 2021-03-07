@@ -1,0 +1,280 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.Product>
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    var shoppingCart = ViewBag.ListCart as List<UsExpress.LiveStreamStore.Lib.Data.DBContext.Models.ShoppingCart>;
+    var listCart = ViewBag.CookieCart;
+}
+
+<style>
+    /* ipad mini */
+    @@media only screen and (min-device-width: 320px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+        #image {
+            height: 120px;
+        }
+    }
+</style>
+
+@if (listCart != null)
+{
+    for (var i = 0; i < listCart.Count; i++)
+    {
+        foreach (var items in Model)
+        {
+            if (items.Id == listCart[i].Id)
+            {
+                <div class="card" style="margin-bottom: 16px;">
+                    <div class="card-body" id="clickCart">
+                        <div class="row" id="fontSize">
+
+                            <div class="col-sm-12 col-md-9 p-2 m-0">
+                                <img id="image" src="@((items.ProductInfo.Image != null) ? items.ProductInfo.Image.Domain + items.ProductInfo.Image.FileUrl : "/images/defaults/ProductDefault.png")" alt="user" class="img-responsive">
+
+                                <h2 id="namePro" class="mb-0">@items.ProductInfo.Name</h2>
+
+                                <span data-toggle="tooltip" title="@items.ProductInfo.Description">Mô tả: <span class="description">@items.ProductInfo.Description</span></span>
+                                <div>Giá tiền: <span class="price">@items.Price</span>đ</div>
+                                <div>Số lượng: <span class="quantity">@listCart[i].Quantity</span></div>
+                                <div>Tổng tiền: <span class="sumPrice">@(listCart[i].Quantity * items.Price)</span></div>
+                                <span class="sumPriceHidden" hidden>@(listCart[i].Quantity * items.Price)</span>
+                                <br>
+                            </div>
+                            <div id="buttons_added" class="col-sm-12 col-md-3 p-2 m-0" style="justify-content: center;">
+                                <p style="text-align: center;">
+                                    <a id="delete" style="border-bottom: 1.5px solid #5581d4; color: #5581d4; cursor: pointer;"><small>Xóa</small></a>
+                                </p>
+                                &nbsp;&nbsp;
+                                <input class="minus is-form" type="button" value="-">
+                                @if (((items.Quantity - (items.NumberProductSold ?? 0)) > items.Limited))
+                                {
+                                    <input readonly id="number" aria-label="quantity" class="input-qty" min="1" max="@items.Limited" name="" type="number" value="@(listCart[i].Quantity <= items.Limited ? listCart[i].Quantity : items.Limited)">
+                                }
+                                else
+                                {
+                                    <input readonly id="number" aria-label="quantity" class="input-qty" min="1" max="@(items.Quantity - (items.NumberProductSold ?? 0))" name="" type="number" value="@(listCart[i].Quantity <= (items.Quantity - (items.NumberProductSold ?? 0)) ? listCart[i].Quantity : (items.Quantity - (items.NumberProductSold ?? 0)))">
+                                }
+                                <input class="plus is-form" type="button" value="+">
+                            </div>
+
+                            <div class="oldPrice" hidden>@items.Price</div>
+                            <div class="id" hidden>@items.Id</div>
+                            <div class="limited" hidden>@items.Limited</div>
+                            <input class="idLivestream" value="@listCart[i].LiveStreamId" hidden />
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+}
+else if (shoppingCart != null)
+{
+    foreach (var items in shoppingCart)
+    {
+        <div class="card" style="margin-bottom: 16px;">
+            <div class="card-body" id="clickCart">
+                <div class="row" id="fontSize">
+
+                    <div class="col-sm-12 col-md-9 p-2 m-0">
+                        <img id="image" src="@((items.Product.ProductInfo.Image != null) ? items.Product.ProductInfo.Image.Domain + items.Product.ProductInfo.Image.FileUrl : "/images/defaults/ProductDefault.png")" alt="user" class="img-responsive">
+
+                        <h2 id="namePro" class="mb-0">@items.Product.ProductInfo.Name</h2>
+
+                        <span data-toggle="tooltip" title="@items.Product.ProductInfo.Description">Mô tả: <span class="description">@items.Product.ProductInfo.Description</span></span>
+                        <div>Giá tiền: <span class="price">@items.Product.Price</span>đ</div>
+                        <div>Số lượng: <span class="quantity">@items.Quantity</span></div>
+                        <div>Tổng tiền: <span class="sumPrice">@(items.Quantity * items.Product.Price)</span></div>
+                        <span class="sumPriceHidden" hidden>@(items.Quantity * items.Product.Price)</span>
+                        <br>
+                    </div>
+
+                    <div id="buttons_added" class="col-sm-12 col-md-3 p-2 m-0" style="justify-content: center;">
+                        <p style="text-align: center;">
+                            <a id="delete" style="border-bottom: 1.5px solid #5581d4; color: #5581d4; cursor: pointer;"><small>Xóa</small></a>
+                        </p>
+                        &nbsp;&nbsp;
+                        <input class="minus is-form" type="button" value="-">
+                        @if (((items.Product.Quantity - (items.Product.NumberProductSold ?? 0)) > items.Product.Limited))
+                        {
+                            <input readonly id="number" aria-label="quantity" class="input-qty" min="1" name="" type="number" value="@(items.Quantity <= (items.Product.Limited - (items.QuantitySold ?? 0)) ? items.Quantity : (items.Product.Limited - (items.QuantitySold ?? 0)))">
+                        }
+                        else
+                        {
+                            <input readonly id="number" aria-label="quantity" class="input-qty" min="1" name="" type="number" value="@(items.Quantity <= (items.Product.Quantity - (items.Product.NumberProductSold ?? 0)) ? items.Quantity : (items.Product.Quantity - (items.Product.NumberProductSold ?? 0)))">
+                        }
+                        <input class="plus is-form" type="button" value="+">
+                    </div>
+
+                    <div class="oldPrice" hidden>@items.Product.Price</div>
+                    <div class="id" hidden>@items.ProductId</div>
+                    <div class="limited" hidden>@items.Product.Limited</div>
+                    <input class="idLivestream" value="@items.LivestreamId" hidden />
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<script>
+
+    $(document).ready(function () {
+        //Cong tong so tien cua san pham va gan vao thanh tien
+        var sum = 0;
+        var sumQuan = 0;
+        let arr = $('div[id="clickCart"]');
+        for (var i = 0; i < arr.length; i++) {
+            var current = $(arr[i]);
+            var price = current.find('.oldPrice').text();
+            var quantity = current.find('#number').val();
+
+            sumQuan = sumQuan + parseInt(quantity);
+            sum = sum + (parseInt(price) * parseInt(quantity));
+            current.find('.sumPrice').text(Intl.NumberFormat().format(parseInt(price) * parseInt(quantity)) + "đ");
+        }
+        $('.totalPrice, .totalOrder').text(Intl.NumberFormat().format(sum) + "đ");
+        $('.countQuantity').text(sumQuan);
+
+        //Tao dau , tren so tien
+        var priceName = document.getElementsByClassName('price');
+        for (var i = 0; i < priceName.length; i++) {
+            priceName[i].innerHTML = Intl.NumberFormat().format(priceName[i].innerHTML);
+        }
+
+        //Tao ... khi chuoi qua 20 ky tu
+        var shortenName = document.getElementsByClassName('description');
+        for (var i = 0; i < shortenName.length; i++) {
+            if (shortenName[i].innerHTML.length > 20) {
+                if (($(window).width() == "414" && $(window).height() == "736") || ($(window).width() >= 768)) {
+                    shortenName[i].innerHTML = shortenName[i].innerHTML.substring(0, 29) + '...';
+                }
+                else if (($(window).width() == "540" && $(window).height() == "720")) {
+                    shortenName[i].innerHTML = shortenName[i].innerHTML.substring(0, 45) + '...';
+                }
+                else {
+                    shortenName[i].innerHTML = shortenName[i].innerHTML.substring(0, 20) + '...';
+                }
+            }
+        }
+    });
+
+    //Khi nhan button + hoặc trừ
+    $('#divCart').on('click', '.plus, .minus', function () {
+        var className = $(this).attr("class");
+        var current = $(this).closest("#clickCart");
+        var number = current.find('#number').val();
+        var idProduct = current.find('.id').text();
+        var idLivestream = current.find('.idLivestream').val();
+        var limited = current.find('.limited').text();
+        if (className == "plus is-form") {
+            number = parseInt(number) + 1;
+        } else {
+            if (number != 1) {
+                number = parseInt(number) - 1;
+            }
+        }
+        current.find('#number').val(number);
+        var cusId = $('.idCus').val();
+        if (cusId == 0) {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("Delete", "Cart")",
+                data: {
+                    Id: idProduct
+                },
+                success: function (response) {
+                    if (response.code == error.success.Code) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("SetQuantityCart", "Cart")",
+                            data: {
+                                ProductId: idProduct,
+                                Quantity: number,
+                                Limited: limited,
+                                LivestreamId: idLivestream
+                            },
+                            success: function (response) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "@Url.Action("GetProductCartById", "Cart")",
+                                    data: {
+                                        IdProduct: idProduct
+                                    },
+                                    dataType: "json",
+                                    success: function (result) {
+                                        current.find('.quantity').text(number);
+                                        var totalPrice = number * result.price;
+                                        current.find('.sumPrice').text(Intl.NumberFormat().format(totalPrice) + "đ");
+                                        current.find('.sumPriceHidden').text(totalPrice);
+                                        var sumPrice = $(".sumPriceHidden");
+                                        var thanhtien = 0;
+                                        for (let i = 0; i < sumPrice.length; i++) {
+                                            thanhtien += parseInt(sumPrice[i].innerText);
+                                        }
+                                        thanhtien = Intl.NumberFormat().format(thanhtien) + "đ";
+                                        $(".totalPrice, .totalOrder").text(thanhtien);
+                                        if (response.code == error.check_product.Code) {
+                                            toastr.options.timeOut = 800;
+                                            toastr.warning(error.check_product.Message);
+                                        }
+                                    }
+                                });
+                                getCookie();
+                            }
+                        });
+                    }
+                }
+            });
+        }else {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("SetQuantityCart", "Cart")",
+                data: {
+                    ProductId: idProduct,
+                    Quantity: number,
+                    Limited: limited,
+                    LivestreamId: idLivestream
+                },
+                success: function (response) {
+                    if (response.code == error.success.Code) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("GetProductCartById", "Cart")",
+                            data: {
+                                IdProduct: idProduct
+                            },
+                            dataType: "json",
+                            success: function (result) {
+                                current.find('.quantity').text(number);
+                                var totalPrice = number * result.price;
+                                current.find('.sumPrice').text(Intl.NumberFormat().format(totalPrice) + "đ");
+                                current.find('.sumPriceHidden').text(totalPrice);
+                                var sumPrice = $(".sumPriceHidden");
+                                var thanhtien = 0;
+                                for (let i = 0; i < sumPrice.length; i++) {
+                                    thanhtien += parseInt(sumPrice[i].innerText);
+                                }
+                                thanhtien = Intl.NumberFormat().format(thanhtien) + "đ";
+                                $(".totalPrice, .totalOrder").text(thanhtien);
+                                if (response.code == error.check_product.Code) {
+                                    toastr.options.timeOut = 800;
+                                    toastr.warning(error.check_product.Message);
+                                }
+                            }
+                        });
+                        getCookie();
+                    }
+                    else {
+                        number = parseInt(number) - 1;
+                        current.find('#number').val(number);
+                        toastr.options.timeOut = 800;
+                        toastr.warning(response.message);
+                    }
+                }
+            });
+        }
+    });
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    })
+
+</script>

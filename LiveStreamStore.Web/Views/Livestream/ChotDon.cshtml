@@ -1,0 +1,113 @@
+﻿@using LiveStreamStore.Lib.Data.DBContext.Models;
+@{
+    ViewData["Title"] = "Đơn hàng";
+    LiveStream liveStream = ViewBag.LiveStream;
+    var TimeZone = int.Parse(ViewBag.CurrentTimeZoneOffSet);
+}
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Danh Sách Đơn Hàng Thuộc Livestream Ngày <b>@liveStream.CreatedDateUtc?.AddSeconds(TimeZone)</b></h4>
+                <input type="hidden" id="IdLiveStream" value="@liveStream.Id" />
+                <div class="row">
+                    <div class="col-sm-12 col-md-2">
+                        @Html.Partial("_PartialFilterTop", new { CallBackName = "getListByFilter" })
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <select class="select form-control" data-select2-id="1" tabindex="-1" aria-hidden="true" id="IdAddress">
+                            <option value="999">Tất cả đơn hàng</option>
+                            <option value="1">Đơn hàng có địa chỉ</option>
+                            <option value="0">Đơn hàng chưa có địa chỉ</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <a target="_blank" href="/Livestream/Products/?idLivestream=@liveStream.Id">
+                            <button id="cc" type="button" class="btn float-right hidden-sm-down btn-info">
+                                <i class="fas fa-reply-all"></i> Sản Phẩm
+                            </button>
+                        </a>
+                    </div>
+                </div>
+                <div id="table-content">
+                        
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12 col-md-6">
+        <button id="xuatExcel" class="btn float-left hidden-sm-down btn-info">
+            Xuất Excel
+        </button>
+    </div>
+    <div class="col-sm-12 col-md-6">
+        <button id="taodon" class="btn float-right hidden-sm-down btn-danger">
+            Tạo Đơn
+        </button>
+    </div>
+</div>
+
+<script>
+    var page = 1
+    // function getListByFilter
+    function getListByFilter(page) {
+        var idLiveStream = $("#IdLiveStream").val();
+        var idAddress = $("#IdAddress").val();
+        var top = $("#Top").val();
+        $.ajax({
+            url: "@Url.Action("GetListOrderByLiveStream", "Livestream")",
+            type: "POST",
+            data: {
+                IdLiveStream: idLiveStream,
+                AddressId: idAddress,
+                Top: top,
+                Page: page
+            },
+            dataType: "html",
+            success: (function (result) {
+                $("#table-content").html(result);
+            })
+        })
+    }
+    // Run Page Index Auto Load Funtion getListByFilter
+    $(document).ready(getListByFilter);
+
+    $("#IdAddress, #Top").change(function (e) {
+        getListByFilter();
+    });
+
+    $("#xuatExcel").click(function () {
+        var idLiveStream = $("#IdLiveStream").val();
+        var idAddress = $("#IdAddress").val();
+        location.href = "/Livestream/ExportExcelOrder?IdLiveStream=" + idLiveStream + "&AddressId=" + idAddress;
+    });
+
+    $("#taodon").click(function () {
+        var idLiveStream = $("#IdLiveStream").val();
+        var idAddress = $("#IdAddress").val();
+        $.ajax({
+            url: "@Url.Action("CallApiCreateListOrder", "Order")",
+            type: "POST",
+            data: {
+                IdLiveStream: idLiveStream,
+                AddressId: idAddress
+            },
+            dataType: "json",
+            success: (function (result) {
+                toastr.options.timeOut = 700;
+                if (result.code == error.success.Code) {
+                    toastr.success("Tạo đơn thành công");
+                    getListByFilter();
+                } else {
+                    toastr.error("Tạo đơn thất bại");
+                }
+            })
+        })
+    });
+
+
+
+</script>

@@ -1,0 +1,31 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.OrderTemp>
+@{
+    var TimeZone = int.Parse(ViewBag.CurrentTimeZoneOffSet);
+}
+@foreach (var item in Model)
+{
+    var localTimeCreateDate = item.CreatedDateUtc?.AddSeconds(TimeZone);
+
+    <tr class="tr-list-livestream">
+        @if (item.OrderDetail.Product.ProductInfo.Image != null)
+        {
+            <td><img src="@(item.OrderDetail.Product.ProductInfo.Image.Domain + item.OrderDetail.Product.ProductInfo.Image.FileUrl) " height="50" width="50" /> @item.OrderDetail.Product.ProductInfo.Name</td>
+        }
+        else
+        {
+            <td><img src="~/images/defaults/ProductDefault.png" height="50" width="50" /> @item.OrderDetail.Product.ProductInfo.Name</td>
+        }
+        <td>@localTimeCreateDate.Day/@localTimeCreateDate.Month/@localTimeCreateDate.Year</td>
+        <td>@item.OrderDetail.Quantity</td>
+        <td class="totalPrice">@item.OrderDetail.TotalPrice</td>
+    </tr>
+}
+
+<script>
+    var totalPrice = document.getElementsByClassName('totalPrice');
+    for (var i = 0; i < totalPrice.length; i++) {
+        if (totalPrice[i].innerHTML.indexOf('đ') === -1) {
+            totalPrice[i].innerHTML = Intl.NumberFormat().format(totalPrice[i].innerHTML) + " đ";
+        }
+    }
+</script>

@@ -1,0 +1,279 @@
+﻿@using LiveStreamStore.Lib.Data.DBContext.Models;
+@model List<Comment>;
+@{
+    ViewData["Title"] = "Comments";
+    List<Product> products = ViewBag.products;
+    LiveStream liveStream = ViewBag.LiveStream;
+    var TimeZone = int.Parse(ViewBag.CurrentTimeZoneOffSet);
+}
+
+<div class="row" id="foot">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Danh Sách Comments Thuộc Livestream Ngày <b>@liveStream.CreatedDateUtc?.AddSeconds(TimeZone)</h4>
+                <input type="hidden" id="idLiveStream" value="@liveStream.Id" />
+                <div class="row">
+                    <div class="col-sm-12 col-md-12">
+                        <div class="input-group ">
+                            <input type="text" class="form-control" disabled="@liveStream.IsStreaming" placeholder="Nhập Link Livestream" name="Link" id="Link" value="@liveStream.Link">
+                            <div class="input-group-append ">
+                                <button id="ButtonGetComment" type="button" class="btn waves-effect waves-light btn-primary" data-toggle="tooltip">
+                                    Lấy Comment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 20px">
+                    <div class="col-sm-12 col-md-2">
+                        <h5 style="padding-top: 12px">Danh sách sản phẩm:</h5>
+                    </div>
+                    <div class="col-sm-12 col-md-2">
+                        <select id="product" class="select form-control" tabindex="-1" aria-hidden="true">
+                            @foreach (var item in products)
+                            {
+                                <option data-price="@item.Price" value="@item.Id">@item.Code</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-sm-12 col-md-2">
+                        <h5 style="padding-top: 12px">
+                            Giá: <b id="price">
+                                @if (products.Any())
+                                {@products.FirstOrDefault().Price}
+                            </b>
+                            VND
+                        </h5>
+                    </div>
+                    <div class="col-sm-12 col-md-2">
+                        <button id="refreshProduct" type="button" data-toggle="tooltip" data-original-title="Refresh Sản Phẩm" class="btn btn-outline-success">
+                            <i class="fa fa-undo"></i>
+                        </button>
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <button id="addProduct" type="button" class="btn float-right hidden-sm-down btn-info" data-toggle="modal" data-target="#add-contact">
+                            Thêm Sản Phẩm
+                        </button>
+                    </div>
+
+                </div>
+
+                @Html.Partial("_PartialModalConfirmOrder")
+
+                @Html.Partial("_PartialModalProduct")
+
+                <div class="table-responsive">
+                    <table id="demo-foo-addrow" class="table table-hover no-wrap">
+                        <thead>
+                            <tr class="footable-header text-center">
+                                <th>Tên Facebook</th>
+                                <th>Comment</th>
+                                <th>Đơn Hàng Đã Đặt</th>
+                                <th>Đơn Hàng Đã Hủy</th>
+                                <th>Thông Tin</th>
+                                <th class="footable-last-visible">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="addComment">
+                            @if (Model.Any())
+                            {
+                                for (int i = Model.Count - 1; i >= 0; i--)
+                                {
+                                    <tr class="tr-list-comment text-center">
+                                        <td class="facebookname">@Model[i].FaceBookName</td>
+                                        <td>@Model[i].CommentContent</td>
+                                        <td>@Model[i].TotalPurchased </td>
+                                        <td>@Model[i].TotalCancellations </td>
+                                        <td><i class="@(Model[i].HasAddress ? Html.Raw("fas fa-map-marker-alt"): null)" style='font-size:24px'></i> <i class="@((Model[i].Phone!=string.Empty && Model[i].Phone!= null) ? Html.Raw("fas fa-phone"):null) " style="font-size:24px;color:red"></i></td>
+                                        <input type="hidden" class="phone" value=@Model[i].Phone />
+                                        @*<input type="hidden" id="address" value=@customers[i].Address/>*@
+                                        <input type="hidden" class="phoneInComment" value=@Model[i].Phone />
+                                        <input type="hidden" class="facebookId" value=@Model[i].FaceBookId />
+                                        <input type="hidden" class="commentFaceBookId" value=@Model[i].CommentFaceBookId />
+                                        <td>
+                                            <button class="btn btn-success btn-sm rounded-0" type="button" data-toggle="modal" data-target="#add-chotdon" name="chotDon-@Model[i].CommentFaceBookId" id="chotDon">Chốt đơn</button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12 col-md-12">
+        <a href="/Livestream/ChotDon/@liveStream.Id">
+            <button id="ketthucLivestream" class="btn float-right hidden-sm-down btn-danger">
+                Kết Thúc Livestream
+            </button>
+        </a>
+    </div>
+</div>
+
+<script>
+
+    $("#price").text(Intl.NumberFormat().format($("#price").text()));
+
+    $("#product").change(function () {
+        $("#price").text($(this).find(':selected').attr('data-price'));
+        $("#price").text(Intl.NumberFormat().format($("#price").text()));
+    })
+
+    $("#ButtonGetComment").click(function () {
+        debugger
+        var link = $("#Link").val();
+        var livestreamId = $("#idLiveStream").val();
+        $("#Link").prop("disabled", true);
+        $("#ButtonGetComment").text("Đang lấy comment");
+        $("#ButtonGetComment").prop("disabled", true);
+        $.ajax({
+            url: "/LiveStream/GetCmtFromLiveStream",
+            type: 'POST',
+            data: { link: link, livestreamId: livestreamId },
+            dataType: 'json',
+            success: function (result) {
+                debugger
+                if (result.code == 1) { // that bai
+                    $("#Link").prop("disabled", false);
+                    $("#ButtonGetComment").prop("disabled", false);
+                    toastr.error(result.message);
+                    $("#ButtonGetComment").text("Lấy comment");
+                    setTimeout(()=>location.href = window.location.href, 1000); // load lại trang cho không bị chạy hàm loadCmt bên dưới.    
+                }
+                else {
+                    // toastr.success(result.message);
+                }
+            },
+            error: function (err) {
+                debugger
+                toastr.error("Lỗi hệ thống :(");
+            }
+
+        });
+        setTimeout(() => loadCmt(livestreamId), 1000)
+
+    })
+
+    function loadCmt(livestreamId) {
+        $.ajax({
+            url: "/LiveStream/GetComment",
+            type: 'POST',
+            data: { livestreamId: livestreamId },
+            dataType: 'html',
+            success: function (result) {
+                $("#addComment").prepend(result);
+                setTimeout(function () { loadCmt(livestreamId); }, 2000);
+            },
+            error: function () {
+                toastr.error("Vui lòng thử lại sau 1 vài giây!");
+                $("#ButtonGetComment").prop("disabled", false);
+                $("#ButtonGetComment").text("Lấy comment");
+            }
+        });
+
+    }
+
+    $("#demo-foo-addrow").on('click', '#chotDon', function () {
+        $("#myModalLabel").text("Chốt đơn");
+        // get the current row
+        var currentRow = $(this).closest(".tr-list-comment");
+        var facebookId = currentRow.find(".facebookId").val();
+        var facebookname = currentRow.find(".facebookname").text();
+        var commentFacebookId = currentRow.find(".commentFaceBookId").val();
+        var selected = $("#product").val();
+        var product = $("#product").html();
+        $("#productInModal").html(product);
+        $("#productInModal").val(selected);
+        var phone = currentRow.find(".phone").val();
+        $("#phoneInModal").val(phone);
+        $("#facebookname").text(facebookname);
+        $("#facebookId").val(facebookId);
+        $("#quantity").val("");
+        $("#commentFacebookId").val(commentFacebookId);
+    });
+
+    $("#CreateOrderTemp").click(function () {
+        var required = document.getElementById('add-chotdon').querySelectorAll("input[required]");
+        var checkRequired = required.length;
+        required.forEach(function (element) {
+            if (element.value.trim() == "") {
+                element.style["border"] = "2px solid red";
+            } else {
+                element.style["border"] = "1px solid #ced4da";
+                checkRequired = checkRequired - 1;
+            }
+        });
+        var checkRequiredProduct = $('#productInModal > option').length;
+        if (checkRequiredProduct == 0) {
+            $('#productInModal').css('background-color', 'orange');     
+        } else {
+            if (checkRequired == 0) {
+                // customer info
+                var Phone = $("#phoneInModal").val();
+                var Fullname = $("#facebookname").text();
+                var FaceBookId = $("#facebookId").val();
+                var customer = { Phone: Phone, Fullname: Fullname, FaceBookId: FaceBookId };
+                // order detail
+                var Description = $("#description").val();
+                var ProductId = $("#productInModal").val();
+                var Quantity = $("#quantity").val();
+                var Price = $("#productInModal").find(':selected').attr('data-price')
+                var orderdetail = { Description: Description, ProductId: ProductId, Quantity: Quantity, Price: Price };
+                // Order temp
+                var LiveStreamId = $("#idLiveStream").val();
+                var CommentFacebookId = $("#commentFacebookId").val();
+                var ordertemp = { LiveStreamId: LiveStreamId, CommentFacebookId: CommentFacebookId }
+                $.ajax({
+                    url: "/LiveStream/CreateOrderTemp",
+                    type: 'POST',
+                    dataType: 'json',
+                    data: { Customer: customer, OrderDetail: orderdetail, OrderTemp: ordertemp },
+                    success: function (result) {
+                        if (result.code == 1) {
+                            toastr.error(result.message);
+                        }
+                        else {
+                            $("#add-chotdon").modal("hide");
+                            $("#description").val("");
+                            $("#quantity").val(1); // hien thi mac dinh so luong 1
+                            toastr.success(result.message);
+                            $(`button[name="chotDon-${CommentFacebookId}"]`).prop('disabled', true);
+                        }
+                    },
+                    error: function (err) {
+                        toastr.error(err);
+                    }
+                });
+            }
+        }
+    })
+
+    $("#refreshProduct").click(function () {
+        var LiveStreamId = $("#idLiveStream").val();
+        $.ajax({
+            url: "/LiveStream/RefreshProduct",
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                id: LiveStreamId
+            },
+            success: function (result) {
+                $("#product").children().remove();
+                result.forEach(function (item) {
+                    var html = `<option data-price="${item.price}" value="${item.id}">${item.code}</option> `;
+                    $("#product").append(html);
+                });
+            }
+        });
+    })
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="modal"]').tooltip()
+    })
+</script>

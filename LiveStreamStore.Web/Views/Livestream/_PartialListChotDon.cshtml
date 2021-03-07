@@ -1,0 +1,131 @@
+﻿@model List<LiveStreamStore.Lib.Data.DBContext.Models.ResultOrderFilter>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table id="demo-foo-addrow" class="table table-hover no-wrap">
+            <thead>
+                <tr class="footable-header text-center">
+                    <th>STT</th>
+                    <th>Tên Facebook</th>
+                    <th>Comment</th>
+                    <th>Mã Sản Phẩm</th>
+                    <th>Giá</th>
+                    <th>Số Lượng</th>
+                    <th>Tổng giá</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int stt = 1;
+                    int? soluongthieu = 0;
+                    int? soluongconlai = 0;
+                    double? totalPrice = 0;
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center" style="background-color:aliceblue">@item.Row</td>
+                            <td class="text-center" style="background-color:aliceblue">@item.CustomerName (@item.CustomerPhone)</td>
+                            @foreach (var orderDetail in item.OrderDetail)
+                            {
+                                if (stt > 1)
+                                {
+                                    <td></td>
+                                    <td></td>
+                                }
+                                <td class="text-center">@orderDetail.OrderTemp.FirstOrDefault().Comment.CommentContent</td>
+                                <td class="text-center">@(orderDetail.Product?.Code ?? "")</td>
+                                <td class="price text-center">@orderDetail.Product.Price</td>
+                                if (orderDetail.SoLuongProductConLai < 0)
+                                {
+                                    soluongthieu += orderDetail.SoLuongProductConLai;
+                                    soluongconlai = orderDetail.Quantity + orderDetail.SoLuongProductConLai;
+                                    if (soluongconlai != 0)
+                                    {
+                                        totalPrice += (orderDetail.Price * soluongconlai);
+                                    }
+                                    <td class="text-center">@orderDetail.Quantity <div class="label label-table label-@(soluongconlai == 0 ? "danger" : "warning")">(@(soluongconlai == 0 ? "Hết hàng" : "Kho còn " + soluongconlai))</div> </td>
+                                }
+                                else
+                                {
+                                    totalPrice += (orderDetail.Price * orderDetail.Quantity);
+                                    soluongconlai = orderDetail.Quantity;
+                                    <td class="text-center">@orderDetail.Quantity</td>
+                                }
+                                <td class="totalPrice text-center">@(orderDetail.Price * soluongconlai)</td>
+                            <tr />
+                            stt++;
+                            }
+                            @{
+                                stt = 1;
+                            }
+                        </tr>
+                        <tr class="tr-list-order">
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="text-center" style="font-weight: bold;">Tổng số lượng: @(item.TotalItem + soluongthieu)</td>
+                            <td class="text-center" style="font-weight: bold;">Tổng giá tiền: <span class="totalPriceOrder">@totalPrice</span></td>
+                            <td class="text-center">
+                                @{
+                                    if (item.MappingToUsTransport == true && item.AddressId != null)
+                                    {
+                                        <button id="taomotdon" type="button" class="btn btn-outline-danger" @(item.Status == 0 ? " disabled" : "") style="cursor: @(item.Status == 0 ? "no-drop" : "pointer")"><i class="fa fa-heart"></i> Tạo Đơn</button>
+                                        <input class="OrderId" type="hidden" value="@item.Id" />
+                                    }
+                                }
+                                <button type="button" class="btn btn-outline-primary"><i class="fa fa-check"></i> Gửi SMS</button>
+                            </td>
+                        </tr>
+                        soluongthieu = 0;
+                        totalPrice = 0;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @Html.Partial("_PartialPaging", new { CallBackName = "getListByFilter", Page = ViewBag.Page, TotalPage = ViewBag.TotalPage, TotalRow = ViewBag.TotalRow })
+
+<script>
+        var priceName = document.getElementsByClassName('price');
+        var totalPriceName = document.getElementsByClassName('totalPrice');
+        for (var i = 0; i < priceName.length; i++) {
+            priceName[i].innerHTML = Intl.NumberFormat().format(priceName[i].innerHTML) + 'đ';
+            totalPriceName[i].innerHTML = Intl.NumberFormat().format(totalPriceName[i].innerHTML) + 'đ';
+        }
+
+        var toalPriceOrderName = document.getElementsByClassName('totalPriceOrder');
+        for (var i = 0; i < toalPriceOrderName.length; i++) {
+            toalPriceOrderName[i].innerHTML = Intl.NumberFormat().format(toalPriceOrderName[i].innerHTML) + 'đ';
+        }
+
+        $("#demo-foo-addrow").on('click', '#taomotdon', function () {
+            // get the current row
+            var currentRow = $(this).closest(".tr-list-order");
+            var id = currentRow.find(".OrderId").val();
+            $.ajax({
+                url: "@Url.Action("CallApiCreateOrder", "Order")",
+                type: "POST",
+                data: {
+                    Id: id
+                },
+                dataType: "json",
+                success: (function (result) {
+                    toastr.options.timeOut = 700;
+                    if (result.code == error.success.Code) {
+                        currentRow.find("#taomotdon").css("cursor", "no-drop");
+                        currentRow.find("#taomotdon").attr("disabled", "disabled");
+                        toastr.success("Tạo đơn thành công");
+                    } else {
+                        toastr.options.timeOut = 700;
+                        toastr.error("Tạo đơn thất bại");
+                    }
+                })
+            })
+        });
+
+</script>
+}

@@ -1,0 +1,27 @@
+﻿@model LiveStreamStore.Lib.Data.DBContext.Models.User;
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div id="content">
+
+</div>
+
+<script>
+
+    // function getUserStore
+    function getUserStore() {
+        $.ajax({
+            url: "@Url.Action("PartialProfile", "UserStore")",
+            type: "POST",
+            dataType: "html",
+            success: (function (result) {
+                $("#content").html(result);
+            })
+        })
+    }
+    // Run Page Index Auto Load Funtion getUserStore
+    $(document).ready(getUserStore);
+
+</script>
+

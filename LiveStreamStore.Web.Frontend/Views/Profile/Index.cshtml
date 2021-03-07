@@ -1,0 +1,338 @@
+﻿@model LiveStreamStore.Lib.Data.DBContext.Models.Customer;
+@{
+    ViewData["Title"] = "Hồ sơ";
+    var avatarUrl = Model.AvatarId == null ? "/images/Defaults/AvatarDefault.png" : Model.Avatar.FileUrl;
+    var address = ViewBag.Address;
+}
+
+<link href="~/css/cropper.min.css" rel="stylesheet" />
+<script src="~/js/cropper.min.js"></script>
+
+<div class="row" id="customerProfile">
+    <div class="col-lg-4 col-xlg-3 col-md-5">
+        <div class="card" id="avatarContent">
+            <div class="card-body">
+                <center class="mt-4">
+                    <img src="@avatarUrl" class="img-circle" width="150">
+                    <h4 class="card-title mt-2">@Model.Fullname</h4>
+                    <div class="row text-center justify-content-md-center">
+                        <div class="col-6">
+                            <a href="#profileModal" class="link" data-target="#profileModal" data-toggle="modal" data-photo="@avatarUrl" id="btnView">
+                                <i class="icon-picture"></i> <font class="font-medium">Xem ảnh</font>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <input type="file" name="upload_image" id="upload_image" accept="image/*" style="display:none;" />
+                            <a class="link" style="cursor: pointer;" id="btnChange"><i class="icon-camera"></i> <font class="font-medium">Đổi ảnh</font></a>
+                        </div>
+                    </div>
+                </center>
+            </div>
+            <div>
+                <hr>
+            </div>
+            <div class="card-body" id="info">
+                <small class="text-muted">Địa chỉ email: </small>
+                <h6>@Model.Email</h6>
+                <small class="text-muted p-t-30 db">Số điện thoại: </small>
+                <h6>@Model.Phone</h6>
+                @if (address != null)
+                {
+                    <small class="text-muted p-t-30 db">Địa chỉ: </small>
+                    <h6>@address.Address1 , @address.WardName , @address.DistrictName , @address.StateProvinceName</h6>
+                }
+            </div>
+
+            <input class="address" value="@(address != null ? address.Address1 : "")" hidden />
+            <input class="addressId" value="@(address != null ? address.Id : "")" hidden />
+            <input class="wardId" value="@(address != null ? address.WardId : "")" hidden />
+            <input class="districtId" value="@(address != null ? address.DistrictId : "")" hidden />
+            <input class="stateProvinceId" value="@(address != null ? address.StateProvinceId : "")" hidden />
+
+        </div>
+    </div>
+    <div class="col-lg-8 col-xlg-9 col-md-7">
+        <div class="card">
+            <ul class="nav nav-tabs profile-tab" role="tablist">
+                <li class="nav-item active" id="TabProfle"> <a class="nav-link active" data-toggle="tab" href="#profile" role="tab">Thông tin</a> </li>
+                @* Khóa tạm thời *@
+                @*<li class="nav-item" id="TabChange"> <a class="nav-link" data-toggle="tab" href="#resetpass" role="tab">Đổi mật khẩu</a> </li>
+                <li class="nav-item" id="TabAddress"> <a class="nav-link" data-toggle="tab" href="#address" role="tab">Địa chỉ</a> </li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane in active" id="profile" role="tabpanel">
+                    @Html.Partial("_PartialProfile")
+                </div>
+                @* Khóa tạm thời *@
+                @*<div class="tab-pane" id="resetpass" role="tabpanel">
+                    @Html.Partial("_PartialChangePassword")
+                </div>
+                <div class="tab-pane" id="address" role="tabpanel">
+                    @Html.Partial("_PartialAddress")
+                </div>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.Partial("_PartialProfileModal")
+
+<script>
+
+    $(document).ready(function () {
+        $("#TabProfle").click(function () {
+            //$("#profileError, #resetPassError, #addressError").hide();
+            $("#profileError, #addressError").hide();
+        });
+
+        //$("#TabChange").click(function () {
+        //    $('#PasswordOld, #Password, #ConfirmPass').val("");
+        //    var required = document.querySelectorAll("input[required]");
+        //    required.forEach(function (element) {
+        //        element.style["border"] = "1px solid LightGray";
+        //    });
+        //});
+
+        $("#TabAddress").click(function () {
+            //$("#profileError, #resetPassError, #addressError").hide();
+            $("#profileError, #addressError").hide();
+            var addressId = $('.addressId').val();
+
+            if (addressId == "") {
+                $("#Id").val(0);
+                CreateAddress();
+            }
+            else {
+                var name = $('.address').val();
+                var state = $('.stateProvinceId').val();
+                var district = $('.districtId').val();
+                var ward = $('.wardId').val();
+
+                $("#Id").val(addressId);
+                $('#AddressName').val(name);
+                EditAddress(state, district, ward);
+            }
+        });
+
+        function validateEmail(Email) {
+            var filter = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+            if (filter.test(Email)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        // Click btnEdit
+        $("#btnEdit").click(function (e) {
+            var required = $("#formProfile").find($("input[required]"));
+            var checkRequired = required.length;
+            required.each(function () {
+                if ($(this).val() == "") {
+                    $(this).css('border-color', 'red');
+                    $("#profileError").html(`<label>Vui lòng không được để trống trường báo đỏ.</label>`).show();
+                } else {
+                    $(this).css('border-color', 'LightGray');
+                    checkRequired = checkRequired - 1;
+                }
+            });
+            if (checkRequired == 0) {
+                var id = $("#Id").val();
+                var fullname = $("#FullName").val();
+                var email = $("#Email").val();
+                if (!validateEmail(email)) {
+                    $('#Email').css('border-color', 'red');
+                    $("#profileError").html(`<label>Địa chỉ Email không hợp lệ.</label>`).show();
+                    e.preventDefault();
+                    return;
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/Profile/UpdateProfile",
+                    data: {
+                        Id: id,
+                        Fullname: fullname,
+                        Email: email
+                    },
+                    success: function (data) {
+                        if (data.code == error.success.Code) {
+                            toastr.success('Cập nhật ' + error.success.Message);
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    }
+                });
+            }
+        });
+
+        //Click Change Pass
+        @*$('#ChangePass').click(function () {
+            var required = $("#formChangePassword").find($("input[required]"));
+            var checkRequired = required.length;
+            required.each(function () {
+                if ($(this).val() == "") {
+                    $(this).css('border-color', 'red');
+                    $("#resetPassError").html(`<label>Vui lòng không được để trống trường báo đỏ.</label>`).show();
+                } else {
+                    $(this).css('border-color', 'LightGray');
+                    checkRequired = checkRequired - 1;
+                }
+            });
+            if (checkRequired == 0) {
+                var oldPass = $('#PasswordOld').val();
+                var newPass = $('#Password').val();
+                var confirmPass = $('#ConfirmPass').val();
+                if (newPass != confirmPass) {
+                    $("#resetPassError").html(`<label>Mật khẩu không trùng khớp.</label>`).show();
+                    $("#Password, #ConfirmPass").css("border", "1px solid red");
+                    return;
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("ResetPassword", "Profile")",
+                    data: {
+                        oldpassword: oldPass,
+                        newpassword: newPass
+                    },
+                    success: function (result) {
+                        if (result.code == error.success.Code) {
+                            $("#resetPassError").hide();
+                            toastr.success("Đổi mật khẩu " + error.success.Message);
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                        else {
+                            $("#oldPass").css("border", "1px solid red");
+                            $("#resetPassError").html(`<label>${result.message}</label>`).show();
+                        }
+                    }
+                })
+            }
+        });*@
+
+        //Tao hoac sua dia chi
+        $('#ChangeAddress').click(function () {
+            var required = $("#formChangeAddress").find($("input[required]"));
+            var checkRequired = required.length;
+            required.each(function () {
+                if ($(this).val() == "") {
+                    $(this).css('border-color', 'red');
+                    $("#addressError").html(`<label>Vui lòng không được để trống trường báo đỏ.</label>`).show();
+                } else {
+                    $(this).css('border-color', 'LightGray');
+                    checkRequired = checkRequired - 1;
+                }
+            });
+
+            if (checkRequired == 0) {
+                var id = $("#Id").val();
+                var idCus = $('.idCus').val();
+                var address = $('#AddressName').val();
+                var state = $("#stateProvinceId").val();
+                var stateName = $('#stateProvinceId :selected').text();
+                var district = $("#districtId").val();
+                var districtName = $('#districtId :selected').text();
+                var ward = $("#wardId").val();
+                var wardName = $('#wardId :selected').text();
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("CreateOrUpdate", "Address")",
+                    data: {
+                        address: {
+                            Id: id,
+                            CustomerId: idCus,
+                            StateProvinceId: state,
+                            DistrictId: district,
+                            WardId: ward,
+                            StateProvinceName: stateName,
+                            DistrictName: districtName,
+                            WardName: wardName,
+                            Address1: address
+                        }
+                    },
+                    success: function (data) {
+                        if (data.code == error.success.Code) {
+                            if (id == 0) {
+                                toastr.success("Tạo địa chỉ thành công");
+                            } else {
+                                toastr.success("Chỉnh sửa địa chỉ thành công");
+                            }
+                            $("#add-address").modal("hide");
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    }
+                });
+            }
+        });
+
+        //Avatar view
+        $('#btnView').on('click', function () {
+            $("#myModalLabel").text('Xem ảnh');
+            $('#divImage').show();
+            $('#divImage').html('<img src="' + $(this).data('photo') + '" width="100%"/>');
+            $('.modal-footer').hide();
+        });
+
+        //Avatar Change
+        $(function () {
+            $("#btnChange").on('click', function (e) {
+                e.preventDefault();
+                $('#upload_image').val("");
+                $("#upload_image:hidden").trigger('click');
+            });
+            $("#upload_image:hidden").on('change', function (event) {
+                $('#profileModal').modal({ backdrop: 'static', keyboard: false }, 'show');
+                $("#myModalLabel").text('Bạn có chắc muốn đổi ảnh không?');
+                $('#divImage').html('<img id="output" src="#" width="100%"/>');
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#output').attr('src', e.target.result)
+                };
+                reader.readAsDataURL(event.target.files[0]);
+                setTimeout(initCropper, 1000);
+                $('.modal-footer').show();
+            });
+        });
+
+        function initCropper() {
+            var image = document.getElementById('output');
+            var cropper = new Cropper(image, {
+                viewMode: 3,
+                aspectRatio: 1 / 1
+            });
+            $('#btnSaveAvatar').click(function () {
+                cropper.getCroppedCanvas().toBlob(function (blob) {
+                    var id = $("#Id").val();
+                    var formData = new FormData();
+                    var file = blob.slice(0, blob.size, 'image/png')
+                    var newfile = new File([file], 'Customer.png', {type: 'image/png'});
+                    formData.append('formFile', newfile);
+                    formData.append('Id', id);
+                    // Use `jQuery.ajax` method
+                    $.ajax({
+                        url: "@Url.Action("ChangeProfileAvatar", "Profile")",
+                        method: "POST",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            if (data.code == error.success.Code) {
+                                window.location.reload();
+                            } else {
+                                toastr.error('Thay đổi avatar thất bại.');
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    });
+
+</script>
+
+<script src="~/js/error.js"></script>

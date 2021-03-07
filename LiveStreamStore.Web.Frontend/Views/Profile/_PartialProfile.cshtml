@@ -1,0 +1,42 @@
+﻿<div class="card-body">
+    <form class="form-horizontal" id="formProfile">
+
+        <div class="form-group">
+            <label class="col-md-12 text-muted">Họ tên :</label>
+            <div class="col-md-12">
+                <input type="text" required placeholder="Họ tên" class="form-control" name="FullName" id="FullName" value="@Model.Fullname">
+            </div>
+        </div>
+
+        <br>
+
+        <div class="form-group">
+            <label class="col-md-12 text-muted">Email :</label>
+            <div class="col-md-12">
+                <input type="email" required placeholder="Email" class="form-control" name="Email" id="Email" value="@Model.Email">
+            </div>
+        </div>
+
+        <br>
+
+        <div class="form-group">
+            <label class="col-md-12 text-muted">Số điện thoại :</label>
+            <div class="col-md-12">
+                <input type="text" minlength="10" maxlength="10" placeholder="Phone" name="Phone" id="Phone" class="form-control" value="@Model.Phone" readonly>
+            </div>
+        </div>
+
+        <div class="alert alert-danger" id="profileError" style="display:none">
+
+        </div>
+
+        <br>
+
+        <div class="form-group">
+            <div class="col-sm-12 text-muted">
+                <input type="text" hidden="hidden" id="Id" value="@Model.Id">
+                <button type="button" id="btnEdit" class="btn btn-success">Cập nhật hồ sơ</button>
+            </div>
+        </div>
+    </form>
+</div>
